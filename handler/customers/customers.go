@@ -3,7 +3,7 @@ package customers
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
-	"github.com/marques999/acme-backend/model"
+	"github.com/marques999/acme-server/model"
 	"net/http"
 )
 
