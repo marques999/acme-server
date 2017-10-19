@@ -1,11 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="dataSourceStorageLocal">
-    <data-source name="acme" uuid="98f9768a-9623-4a16-9710-563626fb1b87">
-      <database-info product="SQLite" version="3.16.1" jdbc-version="2.1" driver-name="SQLiteJDBC" driver-version="native" />
-      <case-sensitivity plain-identifiers="mixed" quoted-identifiers="mixed" />
-      <introspection-schemas>*:main</introspection-schemas>
-    </data-source>
     <data-source name="acme@localhost" uuid="39c022d0-3b0c-4369-8a3e-97870c981d51">
       <database-info product="PostgreSQL" version="9.6.5" jdbc-version="4.2" driver-name="PostgreSQL JDBC Driver" driver-version="42.1.1">
         <identifier-quote-string>&quot;</identifier-quote-string>
@@ -14,6 +9,14 @@
       <secret-storage>master_key</secret-storage>
       <user-name>marques999</user-name>
       <introspection-schemas>acme:public</introspection-schemas>
+    </data-source>
+    <data-source name="acme.db" uuid="38df3b52-cb91-4a7b-91a3-8acd897bca83">
+      <database-info product="SQLite" version="3.16.1" jdbc-version="2.1" driver-name="SQLiteJDBC" driver-version="native" />
+      <case-sensitivity plain-identifiers="mixed" quoted-identifiers="mixed" />
+      <secret-storage>master_key</secret-storage>
+      <auth-required>false</auth-required>
+      <first-sync>true</first-sync>
+      <introspection-schemas>*:main</introspection-schemas>
     </data-source>
   </component>
 </project>

@@ -1,25 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="DataSourceManagerImpl" format="xml" multifile-model="true">
-    <data-source source="LOCAL" name="acme" uuid="98f9768a-9623-4a16-9710-563626fb1b87">
-      <driver-ref>sqlite.xerial</driver-ref>
-      <synchronize>true</synchronize>
-      <imported>true</imported>
-      <remarks>SQLite</remarks>
-      <jdbc-driver>org.sqlite.JDBC</jdbc-driver>
-      <jdbc-url>jdbc:sqlite:C:\Users\MARQUES\go\src\github.com\marques999\feup-cmov\acme-backend\acme.db</jdbc-url>
-      <driver-properties>
-        <property name="enable_load_extension" value="true" />
-      </driver-properties>
-      <libraries>
-        <library>
-          <url>file://$APPLICATION_CONFIG_DIR$/jdbc-drivers/Xerial SQLiteJDBC/3.16.1/sqlite-jdbc-3.16.1.jar</url>
-        </library>
-        <library>
-          <url>file://$APPLICATION_CONFIG_DIR$/jdbc-drivers/Xerial SQLiteJDBC/3.16.1/xerial-sqlite-license.txt</url>
-        </library>
-      </libraries>
-    </data-source>
     <data-source source="LOCAL" name="acme@localhost" uuid="39c022d0-3b0c-4369-8a3e-97870c981d51">
       <driver-ref>postgresql</driver-ref>
       <synchronize>true</synchronize>
@@ -27,6 +8,15 @@
       <jdbc-url>jdbc:postgresql://localhost:5432/acme</jdbc-url>
       <driver-properties>
         <property name="ApplicationName" value="DataGrip" />
+      </driver-properties>
+    </data-source>
+    <data-source source="LOCAL" name="acme.db" uuid="38df3b52-cb91-4a7b-91a3-8acd897bca83">
+      <driver-ref>sqlite.xerial</driver-ref>
+      <synchronize>true</synchronize>
+      <jdbc-driver>org.sqlite.JDBC</jdbc-driver>
+      <jdbc-url>jdbc:sqlite:$PROJECT_DIR$/acme.db</jdbc-url>
+      <driver-properties>
+        <property name="enable_load_extension" value="true" />
       </driver-properties>
     </data-source>
   </component>
