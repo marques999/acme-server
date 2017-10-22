@@ -1,140 +1,84 @@
 package customers
 
 import (
+	"net/http"
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
 	"github.com/marques999/acme-server/common"
-	"net/http"
+	"github.com/marques999/acme-server/auth"
 )
 
-func List(context *gin.Context, database *gorm.DB) {
+func List(database *gorm.DB) (int, interface{}) {
 	customers := []Customer{}
 	database.Preload("CreditCard").Find(&customers)
-	context.JSON(http.StatusOK, customers)
+	return http.StatusOK, customers
 }
 
-func Authenticate(database *gorm.DB, username string, password string) (string, bool) {
-
-	customer := Customer{}
-	dbException := database.Preload("CreditCard").First(&customer, "username = ?", username).Error
-
-	if dbException != nil {
-		return username, false
-	}
-
-	if (username == "admin" && password == "admin") || (customer.Username == username && customer.Password == password) {
-		return username, true
-	}
-
-	return username, false
-}
-
-func Insert(context *gin.Context, database *gorm.DB) {
+func Insert(context *gin.Context, database *gorm.DB) (int, interface{}) {
 
 	customer := Customer{}
 
-	if jsonException := context.Bind(&customer); jsonException == nil {
+	if ex := context.Bind(&customer); ex == nil {
+		return http.StatusBadRequest, ex.Error()
+	} else if customer.Name == common.AdminAccount {
+		return http.StatusUnauthorized, common.PermissionDenied()
+	}
 
-		if customer.Username != "admin" {
+	password, ex := auth.GeneratePassword(customer.Password)
+	customer.Password = password
 
-			if dbException := database.Save(&customer).Error; dbException == nil {
-				context.JSON(http.StatusCreated, customer)
-			} else {
-				common.RespondError(context, http.StatusInternalServerError, dbException.Error())
-			}
-		} else {
-			common.RespondError(context, http.StatusUnauthorized, "permissionDenied")
-		}
+	if ex != nil {
+		return http.StatusInternalServerError, common.JSON(ex)
+	} else if ex := database.Save(&customer).Error; ex != nil {
+		return http.StatusInternalServerError, common.JSON(ex)
 	} else {
-		common.RespondError(context, http.StatusBadRequest, jsonException.Error())
+		return http.StatusCreated, customer
 	}
 }
 
-func Find(context *gin.Context, database *gorm.DB, username string) {
-
-	customerId, validParameters := context.Params.Get("id")
-
-	if validParameters {
-
-		if common.DenyAuthorization(context, username, customerId) {
-			return
-		}
-
-		customer := GetCustomerOr404(context, database, customerId)
-
-		if customer != nil {
-			context.JSON(http.StatusOK, customer)
-		}
-	} else {
-		common.RespondError(context, http.StatusBadRequest, "missingParameter")
-	}
-}
-
-func Update(context *gin.Context, database *gorm.DB, session string) {
-
-	customerId, validParameters := context.Params.Get("id")
-
-	if validParameters {
-
-		if common.DenyAuthorization(context, session, customerId) {
-			return
-		}
-
-		customer := GetCustomerOr404(context, database, customerId)
-
-		if customer == nil {
-			return
-		}
-
-		if jsonException := context.Bind(&customer); jsonException != nil {
-
-			dbException := database.Preload("CreditCard").Update(&customer).Error
-
-			if dbException == nil {
-				context.JSON(http.StatusOK, customer)
-			} else {
-				common.RespondError(context, http.StatusInternalServerError, dbException.Error())
-			}
-		} else {
-			common.RespondError(context, http.StatusBadRequest, jsonException.Error())
-		}
-	} else {
-		common.RespondError(context, http.StatusBadRequest, "missingParameter")
-	}
-}
-
-func Delete(context *gin.Context, database *gorm.DB, username string) {
-
-	customerId, validParameters := context.Params.Get("id")
-
-	if validParameters {
-
-		if common.DenyAuthorization(context, username, customerId) {
-			return
-		}
-
-		dbException := database.Delete(&Customer{Username: customerId}).Error
-
-		if dbException == nil {
-			context.JSON(http.StatusNoContent, nil)
-		} else {
-			common.RespondError(context, http.StatusInternalServerError, dbException.Error())
-		}
-	} else {
-		common.RespondError(context, http.StatusBadRequest, "missingParameter")
-	}
-}
-
-func GetCustomerOr404(context *gin.Context, database *gorm.DB, username string) *Customer {
+func Find(context *gin.Context, database *gorm.DB, session string) (int, interface{}) {
 
 	customer := Customer{}
-	dbException := database.Preload("CreditCard").First(&customer, "username = ?", username).Error
 
-	if dbException == nil {
-		return &customer
+	if id, exists := context.Params.Get("id"); exists == false {
+		return http.StatusBadRequest, common.MissingParameter()
+	} else if session != common.AdminAccount && session != id {
+		return http.StatusUnauthorized, common.PermissionDenied()
+	} else if dbException := database.Preload("CreditCard").First(&customer, "username = ?", id).Error; dbException != nil {
+		return http.StatusNotFound, common.JSON(dbException)
 	} else {
-		common.RespondError(context, http.StatusNotFound, dbException.Error())
+		return http.StatusOK, customer
 	}
+}
 
-	return nil
+func Update(context *gin.Context, database *gorm.DB, session string) (int, interface{}) {
+
+	customer := Customer{}
+
+	if id, exists := context.Params.Get("id"); exists == false {
+		return http.StatusBadRequest, common.MissingParameter()
+	} else if session != common.AdminAccount && session != id {
+		return http.StatusUnauthorized, common.PermissionDenied()
+	} else if ex := database.Preload("CreditCard").First(&customer, "username = ?", session).Error; ex != nil {
+		return http.StatusInternalServerError, common.JSON(ex)
+	} else if ex := context.Bind(&customer); ex != nil {
+		return http.StatusBadRequest, common.JSON(ex)
+	} else if ex := database.Preload("CreditCard").Update(&customer).Error; ex != nil {
+		return http.StatusInternalServerError, common.JSON(ex)
+	} else {
+		return http.StatusOK, customer
+	}
+}
+
+func Delete(context *gin.Context, database *gorm.DB, username string) (int, interface{}) {
+
+	if id, exists := context.Params.Get("id"); exists == false {
+		return http.StatusBadRequest, common.MissingParameter()
+	} else if username != common.AdminAccount && username != id {
+		return http.StatusUnauthorized, common.PermissionDenied()
+	} else if ex := database.Delete(&Customer{Username: id}).Error; ex != nil {
+		return http.StatusInternalServerError, common.JSON(ex)
+	} else {
+		return http.StatusNoContent, nil
+	}
 }
