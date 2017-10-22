@@ -9,7 +9,7 @@ import (
 
 func InitializeRoutes(database *gorm.DB, middleware *jwt.GinJWTMiddleware, router *gin.Engine) {
 
-	routes := router.Group("/tokens")
+	routes := router.Group("/orders")
 	{
 		routes.Use(middleware.MiddlewareFunc())
 		{
