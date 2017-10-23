@@ -12,6 +12,6 @@ func Authenticate(database *gorm.DB, username string, password string) (string, 
 	if dbException := database.Preload("CreditCard").First(&customer, "username = ?", username).Error; dbException != nil {
 		return username, false
 	} else {
-		return username, auth.VerifyPassword(customer.Password, username, password) == nil
+		return username, auth.VerifyPassword(customer.Password, password) == nil
 	}
 }

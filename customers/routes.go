@@ -3,8 +3,8 @@ package customers
 import (
 	"fmt"
 	"net/http"
-	"github.com/gin-gonic/gin"
 	"github.com/appleboy/gin-jwt"
+	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
 	"github.com/marques999/acme-server/common"
 )

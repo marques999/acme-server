@@ -7,7 +7,6 @@ import (
 	"github.com/marques999/acme-server/customers"
 	"github.com/marques999/acme-server/orders"
 	"github.com/marques999/acme-server/products"
-	"github.com/pborman/uuid"
 )
 
 func clearTables(database *gorm.DB) error {
@@ -32,11 +31,15 @@ func populateTables(database *gorm.DB) error {
 	user1 := customers.Customer{
 		Address:   "R. Dr. Roberto Frias 291",
 		Country:   "PT",
+		Username:  "admin",
 		Email:     "admin@acme.pt",
 		Name:      "Administrator",
 		Password:  string(user1Password),
 		TaxNumber: "123456789",
-		Username:  "admin",
+		PublicKey: `-----BEGIN PUBLIC KEY-----
+MEowDQYJKoZIhvcNAQEBBQADOQAwNgIvAL1L9h1N9xqNe0I4ddyjKD6lv0ArcEhBJbU550urvmvJ
+qa1Rm8Zr+V0+VCp9swcCAwEAAQ==
+-----END PUBLIC KEY-----`,
 		CreditCard: &customers.CreditCard{
 			Number:   "123456789",
 			Type:     "VISA",
@@ -51,11 +54,15 @@ func populateTables(database *gorm.DB) error {
 	user2 := customers.Customer{
 		Address:   "Rua Costa, nº 176",
 		Country:   "PT",
+		Username:  "marques999",
 		Email:     "up201305642@fe.up.pt",
 		Name:      "Diogo Marques",
 		Password:  string(user2Password),
 		TaxNumber: "222555777",
-		Username:  "marques999",
+		PublicKey: `-----BEGIN PUBLIC KEY-----
+MEowDQYJKoZIhvcNAQEBBQADOQAwNgIvAL1L9h1N9xqNe0I4ddyjKD6lv0ArcEhBJbU550urvmvJ
+qa1Rm8Zr+V0+VCp9swcCAwEAAQ==
+-----END PUBLIC KEY-----`,
 		CreditCard: &customers.CreditCard{
 			Number:   "800200400",
 			Validity: time.Now().AddDate(3, 6, 0),
@@ -70,11 +77,15 @@ func populateTables(database *gorm.DB) error {
 	user3 := customers.Customer{
 		Address:   "",
 		Country:   "PT",
+		Username:  "jabst",
 		Email:     "up201303930@fe.up.pt",
 		Name:      "José Teixeira",
 		Password:  string(user3Password),
 		TaxNumber: "987654321",
-		Username:  "jabst",
+		PublicKey: `-----BEGIN PUBLIC KEY-----
+MEowDQYJKoZIhvcNAQEBBQADOQAwNgIvAL1L9h1N9xqNe0I4ddyjKD6lv0ArcEhBJbU550urvmvJ
+qa1Rm8Zr+V0+VCp9swcCAwEAAQ==
+-----END PUBLIC KEY-----`,
 		CreditCard: &customers.CreditCard{
 			Number:   "360420999",
 			Validity: time.Now().AddDate(1, 3, 13),
@@ -179,36 +190,49 @@ func populateTables(database *gorm.DB) error {
 		return ex
 	}
 
-	if ex := database.Save(&orders.Order{
-		Customer: &user2,
+	order1 := &orders.Order{
 		Valid:    true,
-		Token:    uuid.NewUUID(),
+		Customer: &user2,
 		Products: []products.Product{product1},
-	}).Error; ex != nil {
+	}
+
+	order1.Token, _ = orders.GenerateHashId(order1)
+
+	if ex := database.Save(&order1).Error; ex != nil {
 		return ex
 	}
 
-	if ex := database.Save(&orders.Order{
+	order2 := &orders.Order{
 		Valid:    false,
 		Customer: &user1,
 		Products: []products.Product{product2},
-	}).Error; ex != nil {
+	}
+
+	order2.Token, _ = orders.GenerateHashId(order2)
+
+	if ex := database.Save(&order2).Error; ex != nil {
 		return ex
 	}
 
-	if ex := database.Save(&orders.Order{
+	order3 := &orders.Order{
+		Valid:    true,
 		Customer: &user2,
-		Valid:    true,
-		Token:    uuid.NewUUID(),
 		Products: []products.Product{product4, product5},
-	}).Error; ex != nil {
+	}
+
+	order3.Token, _ = orders.GenerateHashId(order3)
+
+	if ex := database.Save(&order3).Error; ex != nil {
 		return ex
 	}
 
-	return database.Save(&orders.Order{
-		Customer: &user3,
+	order4 := &orders.Order{
 		Valid:    true,
-		Token:    uuid.NewUUID(),
+		Customer: &user3,
 		Products: []products.Product{product3},
-	}).Error
+	}
+
+	order4.Token, _ = orders.GenerateHashId(order4)
+
+	return database.Save(&order4).Error
 }

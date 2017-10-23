@@ -2,7 +2,7 @@ package auth
 
 import "golang.org/x/crypto/bcrypt"
 
-func VerifyPassword(hashedPassword string, username string, rawPassword string) error {
+func VerifyPassword(hashedPassword string, rawPassword string) error {
 	return bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(rawPassword))
 }
 

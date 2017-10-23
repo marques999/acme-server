@@ -10,12 +10,9 @@
       <user-name>marques999</user-name>
       <introspection-schemas>acme:public</introspection-schemas>
     </data-source>
-    <data-source name="acme.db" uuid="38df3b52-cb91-4a7b-91a3-8acd897bca83">
+    <data-source name="acme" uuid="cf6a0bd2-2a8a-43b1-9a63-19dcb95700bd">
       <database-info product="SQLite" version="3.16.1" jdbc-version="2.1" driver-name="SQLiteJDBC" driver-version="native" />
       <case-sensitivity plain-identifiers="mixed" quoted-identifiers="mixed" />
-      <secret-storage>master_key</secret-storage>
-      <auth-required>false</auth-required>
-      <first-sync>true</first-sync>
       <introspection-schemas>*:main</introspection-schemas>
     </data-source>
   </component>

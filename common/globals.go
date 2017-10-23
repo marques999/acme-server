@@ -1,7 +1,7 @@
 package common
 
 //var ConnectionType = "sqlite3"
-//var ConnectionString = ""
+//var ConnectionString = "acme.db"
 
 var Hostname = ":3333"
 var AdminAccount = "admin"

@@ -14,12 +14,7 @@ import (
 
 func Run() {
 
-	// Global Configuration
-
 	gin.SetMode(gin.ReleaseMode)
-
-	// Database Connection
-
 	database, connectionException := gorm.Open(common.ConnectionType, common.ConnectionString)
 
 	if connectionException != nil {
@@ -27,19 +22,10 @@ func Run() {
 	}
 
 	defer database.Close()
-
-	// Database Migrations
-
 	products.Migrate(database)
 	orders.Migrate(database)
 	customers.Migrate(database)
-
-	// Initialize Middleware
-
 	middleware := GetAuthenticator(database)
-
-	// Initialize Routes
-
 	router := gin.Default()
 	auth.InitializeRoutes(middleware, router)
 	admin.InitializeRoutes(database, router)

@@ -18,15 +18,11 @@ func InitializeRoutes(database *gorm.DB, middleware *jwt.GinJWTMiddleware, route
 			})
 
 			routes.POST("/", func(context *gin.Context) {
-				context.JSON(Insert(context, database))
+				context.JSON(Insert(context, database, fmt.Sprint(jwt.ExtractClaims(context)["id"])))
 			})
 
 			routes.GET("/:id", func(context *gin.Context) {
 				context.JSON(Find(context, database, fmt.Sprint(jwt.ExtractClaims(context)["id"])))
-			})
-
-			routes.PUT("/:id", func(context *gin.Context) {
-				context.JSON(Validate(context, database, fmt.Sprint(jwt.ExtractClaims(context)["id"])))
 			})
 
 			routes.DELETE("/:id", func(context *gin.Context) {
