@@ -10,14 +10,12 @@ import (
 
 func List(database *gorm.DB, username string) (int, interface{}) {
 
-	customers := []Customer{}
-
 	if username != common.AdminAccount {
-		return http.StatusUnauthorized, nil
-	} else {
-		database.Preload("CreditCard").Find(&customers)
+		return http.StatusUnauthorized, common.PermissionDenied()
 	}
 
+	customers := []Customer{}
+	database.Preload("CreditCard").Find(&customers)
 	jsonCustomers := make([]CustomerJSON, len(customers))
 
 	for i, v := range customers {
@@ -46,11 +44,12 @@ func Insert(context *gin.Context, database *gorm.DB) (int, interface{}) {
 	}
 
 	customer := Customer{
+		Password:  hashedPassword,
 		Name:      customerPOST.Name,
 		Username:  customerPOST.Username,
-		Password:  hashedPassword,
 		Country:   customerPOST.Country,
-		Address:   customerPOST.Address,
+		Address1:  customerPOST.Address1,
+		Address2:  customerPOST.Address2,
 		TaxNumber: customerPOST.TaxNumber,
 		PublicKey: customerPOST.PublicKey,
 		CreditCard: &CreditCard{
@@ -62,11 +61,11 @@ func Insert(context *gin.Context, database *gorm.DB) (int, interface{}) {
 
 	dbException := database.Save(&customer).Error
 
-	if dbException == nil {
-		return http.StatusCreated, generateJson(customer)
-	} else {
+	if dbException != nil {
 		return http.StatusInternalServerError, common.JSON(dbException)
 	}
+
+	return http.StatusCreated, generateJson(customer)
 }
 
 func Find(context *gin.Context, database *gorm.DB, username string) (int, interface{}) {
@@ -79,14 +78,14 @@ func Find(context *gin.Context, database *gorm.DB, username string) (int, interf
 		return http.StatusUnauthorized, common.PermissionDenied()
 	}
 
-	customer := Customer{Username: customerId}
-	dbException := database.Preload("CreditCard").First(&customer, &customer).Error
+	customer := Customer{}
+	dbException := database.Preload("CreditCard").First(&customer, "username = ?", customerId).Error
 
-	if dbException == nil {
-		return http.StatusOK, generateJson(customer)
-	} else {
+	if dbException != nil {
 		return http.StatusNotFound, common.JSON(dbException)
 	}
+
+	return http.StatusOK, generateJson(customer)
 }
 
 func Update(context *gin.Context, database *gorm.DB, username string) (int, interface{}) {
@@ -100,10 +99,10 @@ func Update(context *gin.Context, database *gorm.DB, username string) (int, inte
 	}
 
 	customer := Customer{}
-	dbsException := database.Preload("CreditCard").First(&customer, username).Error
+	dbException := database.Preload("CreditCard").First(&customer, username).Error
 
-	if dbsException != nil {
-		return http.StatusInternalServerError, common.JSON(dbsException)
+	if dbException != nil {
+		return http.StatusInternalServerError, common.JSON(dbException)
 	}
 
 	jsonException := context.Bind(&customer)
@@ -112,13 +111,13 @@ func Update(context *gin.Context, database *gorm.DB, username string) (int, inte
 		return http.StatusBadRequest, common.JSON(jsonException)
 	}
 
-	dbuException := database.Preload("CreditCard").Update(&customer).Error
+	dbException = database.Preload("CreditCard").Update(&customer).Error
 
-	if dbuException == nil {
-		return http.StatusOK, generateJson(customer)
-	} else {
-		return http.StatusInternalServerError, common.JSON(dbuException)
+	if dbException != nil {
+		return http.StatusInternalServerError, common.JSON(dbException)
 	}
+
+	return http.StatusOK, generateJson(customer)
 }
 
 func Delete(context *gin.Context, database *gorm.DB, username string) (int, interface{}) {
@@ -133,11 +132,11 @@ func Delete(context *gin.Context, database *gorm.DB, username string) (int, inte
 
 	dbException := database.Delete(&Customer{Username: customerId}).Error
 
-	if dbException == nil {
-		return http.StatusNoContent, nil
-	} else {
+	if dbException != nil {
 		return http.StatusInternalServerError, common.JSON(dbException)
 	}
+
+	return http.StatusNoContent, nil
 }
 
 func Authenticate(database *gorm.DB, username string, password string) (string, bool) {
@@ -146,7 +145,7 @@ func Authenticate(database *gorm.DB, username string, password string) (string, 
 
 	if dbException := database.First(&customer, &customer).Error; dbException != nil {
 		return customer.Username, false
-	} else {
-		return customer.Username, auth.VerifyPassword(customer.Password, password) == nil
 	}
+
+	return customer.Username, auth.VerifyPassword(customer.Password, password) == nil
 }

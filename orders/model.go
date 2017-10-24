@@ -6,6 +6,12 @@ import (
 	"github.com/marques999/acme-server/products"
 )
 
+const (
+	ValidationFailed   = iota
+	ValidationComplete = iota
+	Purchased          = iota
+)
+
 type Order struct {
 	common.Model
 	Token    string

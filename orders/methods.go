@@ -8,11 +8,14 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/speps/go-hashids"
 	"github.com/marques999/acme-server/common"
+	"github.com/marques999/acme-server/products"
 )
 
 func encodeSha1(payload []byte) []byte {
+
 	sha1Algorithm := sha1.New()
 	sha1Algorithm.Write([]byte(payload))
+
 	return sha1Algorithm.Sum(nil)
 }
 
@@ -30,22 +33,35 @@ func getQueryOptions(orderId string, customer string) map[string]interface{} {
 	}
 }
 
-func decodePublicKey(publicKey string) (key *rsa.PublicKey) {
+func decodePublicKey(pemCertificate string) (key *rsa.PublicKey) {
 
-	block, _ := pem.Decode([]byte(publicKey))
+	keyBlock, _ := pem.Decode([]byte(pemCertificate))
 
-	if block != nil {
+	if keyBlock != nil {
 
-		if pub, err := x509.ParsePKIXPublicKey(block.Bytes); err == nil {
+		publicKey, cryptoException := x509.ParsePKIXPublicKey(keyBlock.Bytes)
 
-			switch pub := pub.(type) {
+		if cryptoException == nil {
+
+			switch publicKey := publicKey.(type) {
 			case *rsa.PublicKey:
-				return pub
+				return publicKey
 			}
 		}
 	}
 
 	return nil
+}
+
+func CalculateTotal(customerCart []products.Product) float64 {
+
+	var orderTotal = 0.0
+
+	for _, product := range customerCart {
+		orderTotal += product.Price
+	}
+
+	return orderTotal
 }
 
 func GenerateToken(order *Order) (string, error) {

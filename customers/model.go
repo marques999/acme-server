@@ -23,9 +23,10 @@ type Customer struct {
 	common.Model
 	Name         string `sql:"not null"`
 	PublicKey    string `sql:"not null"`
-	Password     string `sql:"not null"`
 	Username     string `sql:"not null;unique;unique_text"`
-	Address      string `sql:"not null"`
+	Password     string `sql:"not null"`
+	Address1     string `sql:"not null"`
+	Address2     string `sql:"not null"`
 	TaxNumber    string `sql:"gorm null;size:9"`
 	Country      string `sql:"not null;size:2"`
 	CreditCardID int
@@ -35,7 +36,8 @@ type Customer struct {
 type CustomerJSON struct {
 	Name       string         `json:"name"`
 	Username   string         `json:"email"`
-	Address    string         `json:"address"`
+	Address1   string         `json:"address1"`
+	Address2   string         `json:"address2"`
 	TaxNumber  string         `json:"nif"`
 	Country    string         `json:"country"`
 	CreatedAt  time.Time      `json:"created"`
@@ -46,10 +48,11 @@ type CustomerJSON struct {
 type CustomerPOST struct {
 	Name       string         `binding:"required" json:"name"`
 	PublicKey  string         `binding:"required" json:"key"`
-	Password   string         `binding:"required" json:"password"`
-	Username   string         `binding:"required" json:"email"`
-	Address    string         `binding:"required" json:"address"`
 	TaxNumber  string         `binding:"required" json:"nif"`
+	Username   string         `binding:"required" json:"email"`
+	Password   string         `binding:"required" json:"password"`
+	Address1   string         `binding:"required" json:"address1"`
+	Address2   string         `binding:"required" json:"address2"`
 	Country    string         `binding:"required" json:"country"`
 	CreditCard CreditCardJSON `binding:"required" json:"credit_card"`
 }

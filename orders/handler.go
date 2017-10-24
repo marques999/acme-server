@@ -5,7 +5,9 @@ import (
 	"crypto/rsa"
 	"encoding/base64"
 	"encoding/json"
+	"math/rand"
 	"net/http"
+	"time"
 	"github.com/jinzhu/gorm"
 	"github.com/gin-gonic/gin"
 	"github.com/marques999/acme-server/common"
@@ -41,20 +43,20 @@ func Checkout(context *gin.Context, database *gorm.DB, username string) (int, in
 	}
 
 	order := Order{}
-	dbsException := database.Preload("Products").First(&order, getQueryOptions(orderId, username)).Error
+	dbException := database.Preload("Products").First(&order, getQueryOptions(orderId, username)).Error
 
-	if dbsException != nil {
-		return http.StatusInternalServerError, common.JSON(dbsException)
+	if dbException != nil {
+		return http.StatusInternalServerError, common.JSON(dbException)
 	}
 
-	order.Status = 2
-	dbuException := database.Update(&order).Error
+	order.Status = Purchased
+	dbException = database.Update(&order).Error
 
-	if dbuException == nil {
-		return http.StatusOK, generateJson(order)
-	} else {
-		return http.StatusInternalServerError, common.JSON(dbuException)
+	if dbException != nil {
+		return http.StatusInternalServerError, common.JSON(dbException)
 	}
+
+	return http.StatusOK, generateJson(order)
 }
 
 func Insert(context *gin.Context, database *gorm.DB, username string) (int, interface{}) {
@@ -73,18 +75,18 @@ func Insert(context *gin.Context, database *gorm.DB, username string) (int, inte
 		return http.StatusBadRequest, common.JSON(base64Exception)
 	}
 
-	orderProducts := []string{}
-	jsonException := json.Unmarshal(payload, &orderProducts)
+	barcodeList := []string{}
+	jsonException := json.Unmarshal(payload, &barcodeList)
 
 	if jsonException != nil {
 		return http.StatusBadRequest, common.JSON(jsonException)
 	}
 
 	customer := customers.Customer{}
-	dbsException := database.First(&customer, "username = ?", username).Error
+	dbException := database.First(&customer, "username = ?", username).Error
 
-	if dbsException != nil {
-		return http.StatusInternalServerError, common.JSON(dbsException)
+	if dbException != nil {
+		return http.StatusInternalServerError, common.JSON(dbException)
 	}
 
 	signature, _ := base64.StdEncoding.DecodeString(orderPOST.Signature)
@@ -94,29 +96,45 @@ func Insert(context *gin.Context, database *gorm.DB, username string) (int, inte
 		return http.StatusUnauthorized, common.PermissionDenied()
 	}
 
-	array := []products.Product{}
-	order := Order{Customer: customer.ID, Status: 0}
+	cryptoException := rsa.VerifyPKCS1v15(publicKey, crypto.SHA1, sha1Checksum, signature)
 
-	if ex := rsa.VerifyPKCS1v15(publicKey, crypto.SHA1, sha1Checksum, signature); ex != nil {
-		return http.StatusUnauthorized, common.JSON(ex)
-	} else if ex := database.Where("barcode in (?)", orderProducts).Find(&array).Error; ex != nil {
-		return http.StatusInternalServerError, common.JSON(ex)
-	} else if ex := database.Create(&order).Association("Products").Append(array).Error; ex != nil {
-		return http.StatusInternalServerError, common.JSON(ex)
+	if cryptoException != nil {
+		return http.StatusUnauthorized, common.JSON(cryptoException)
 	}
 
-	if token, ex := GenerateToken(&order); ex == nil {
-		order.Status = 1
-		order.Token = token
+	customerCart := []products.Product{}
+	dbException = database.Where("barcode in (?)", barcodeList).Find(&customerCart).Error
+
+	if dbException != nil {
+		return http.StatusInternalServerError, common.JSON(dbException)
+	}
+
+	order := Order{Customer: customer.ID, Status: ValidationFailed, Total: CalculateTotal(customerCart)}
+	dbException = database.Create(&order).Association("Products").Append(customerCart).Error
+
+	if dbException != nil {
+		return http.StatusInternalServerError, common.JSON(dbException)
+	}
+
+	orderToken, hashException := GenerateToken(&order)
+
+	if hashException == nil {
+		order.Token = orderToken
 	} else {
-		return http.StatusInternalServerError, common.JSON(ex)
+		return http.StatusInternalServerError, common.JSON(hashException)
 	}
 
-	if ex := database.Save(&order).Error; ex != nil {
-		return http.StatusInternalServerError, common.JSON(ex)
-	} else {
-		return http.StatusOK, generateJson(order)
+	if customer.CreditCard.Validity.After(time.Now()) && rand.Float64() <= common.NaniProbability {
+		order.Status = ValidationComplete
 	}
+
+	dbException = database.Save(&order).Error
+
+	if dbException != nil {
+		return http.StatusInternalServerError, common.JSON(dbException)
+	}
+
+	return http.StatusOK, generateJson(order)
 }
 
 func Find(context *gin.Context, database *gorm.DB, username string) (int, interface{}) {
@@ -134,11 +152,11 @@ func Find(context *gin.Context, database *gorm.DB, username string) (int, interf
 	order := Order{}
 	dbException := database.Preload("Products").First(&order, "token = ?", tokenId).Error
 
-	if dbException == nil {
-		return http.StatusCreated, generateJson(order)
-	} else {
+	if dbException != nil {
 		return http.StatusNotFound, common.JSON(dbException)
 	}
+
+	return http.StatusCreated, generateJson(order)
 }
 
 func Delete(context *gin.Context, database *gorm.DB, username string) (int, interface{}) {
@@ -151,9 +169,9 @@ func Delete(context *gin.Context, database *gorm.DB, username string) (int, inte
 
 	dbException := database.Delete(&Order{}, getQueryOptions(orderId, username)).Error
 
-	if dbException == nil {
-		return http.StatusNoContent, nil
-	} else {
+	if dbException != nil {
 		return http.StatusUnauthorized, common.JSON(dbException)
 	}
+
+	return http.StatusNoContent, nil
 }
