@@ -13,5 +13,3 @@ func MissingParameter() map[string]interface{} {
 func PermissionDenied() map[string]interface{} {
 	return gin.H{"error": "permissionDenied"}
 }
-
-var AdminAccount = "admin"

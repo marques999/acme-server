@@ -32,7 +32,6 @@ func populateTables(database *gorm.DB) error {
 		Address:   "R. Dr. Roberto Frias 291",
 		Country:   "PT",
 		Username:  "admin",
-		Email:     "admin@acme.pt",
 		Name:      "Administrator",
 		Password:  string(user1Password),
 		TaxNumber: "123456789",
@@ -55,7 +54,6 @@ qa1Rm8Zr+V0+VCp9swcCAwEAAQ==
 		Address:   "Rua Costa, nº 176",
 		Country:   "PT",
 		Username:  "marques999",
-		Email:     "up201305642@fe.up.pt",
 		Name:      "Diogo Marques",
 		Password:  string(user2Password),
 		TaxNumber: "222555777",
@@ -78,7 +76,6 @@ qa1Rm8Zr+V0+VCp9swcCAwEAAQ==
 		Address:   "",
 		Country:   "PT",
 		Username:  "jabst",
-		Email:     "up201303930@fe.up.pt",
 		Name:      "José Teixeira",
 		Password:  string(user3Password),
 		TaxNumber: "987654321",
@@ -98,10 +95,11 @@ qa1Rm8Zr+V0+VCp9swcCAwEAAQ==
 	}
 
 	product1 := products.Product{
-		Brand:   "Acer",
-		Name:    "Aspire E5-571G-72M5",
-		Barcode: "5701928664431",
-		Price:   490.00,
+		Brand:    "Acer",
+		Name:     "Aspire E5-571G-72M5",
+		Price:    490.00,
+		Barcode:  "4713147489589",
+		ImageUri: "https://www.notebookcheck.net/fileadmin/Notebooks/Acer/Aspire_E5-571G-536E/Aspire_E5_571_531_551_521_511_nontouch_black_glare_gallery_01.png",
 		Description: "Aspire E Series laptops are great choices for everyday" +
 			"users, with lots of appealing options and an attractive design" +
 			"that exceed expectations. With many enhanced components, color " +
@@ -114,10 +112,11 @@ qa1Rm8Zr+V0+VCp9swcCAwEAAQ==
 	}
 
 	product2 := products.Product{
-		Brand:   "Cooler Master",
-		Name:    "MasterKeys Lite L Combo",
-		Barcode: "4719512052914",
-		Price:   54.99,
+		Brand:    "Cooler Master",
+		Name:     "MasterKeys Lite L Combo",
+		Price:    54.99,
+		Barcode:  "4719512052914",
+		ImageUri: "http://cdn1.bigcommerce.com/server3900/9dd4a/products/1287/images/6402/Cooler_Master_MasterKeys_Lite_L_Combo_10__09359.1468418659.1280.1280.jpg",
 		Description: "Mem-chanical Switches: Cooler Master’s exclusive switches " +
 			"are durable and feel like mechanical switches with satisfying" +
 			"tactile feedback. Brillant Illumination - Zoned RGB backlighting " +
@@ -134,10 +133,11 @@ qa1Rm8Zr+V0+VCp9swcCAwEAAQ==
 	}
 
 	product3 := products.Product{
-		Brand:   "MSI",
-		Name:    "GeForce GTX 1060 Gaming X 6GB",
-		Barcode: "4719072470364",
-		Price:   339.00,
+		Brand:    "MSI",
+		Name:     "GeForce GTX 1060 Gaming X 6GB",
+		Price:    339.00,
+		Barcode:  "4719072470364",
+		ImageUri: "https://www.picclickimg.com/00/s/OTU4WDEyODA=/z/pBMAAOSwvflZO0rM/$/MSI-GTX-1060-GAMING-X-6G-Nvidia-GeForce-_1.jpg",
 		Description: "*THE ULTIMATE PC GAMING PLATFORM*\nGeForce GTX graphics cards are the most " +
 			"advanced ever created. Discover unprecedented performance, power efficiency, and " +
 			"next-generation gaming experiences.\n*Nvidia VR READY*\nDiscover next-generation VR " +
@@ -157,10 +157,11 @@ qa1Rm8Zr+V0+VCp9swcCAwEAAQ==
 	}
 
 	product4 := products.Product{
-		Brand:   "Intel",
-		Name:    "i5-6600K 3.5GHz 6MB Sk1151",
-		Barcode: "5032037076142",
-		Price:   279.90,
+		Brand:    "Intel",
+		Name:     "i5-6600K 3.5GHz 6MB Sk1151",
+		Price:    279.90,
+		Barcode:  "5032037076142",
+		ImageUri: "https://images10.newegg.com/ProductImage/19-117-561-02.jpg",
 		Description: "The Intel Core i5-6600K is based on the new \"Skylake\" 14nm manufacturing " +
 			"process. Sporting 4 physical cores with base/turbo clocks of 3.5/3.9 GHz the 6600K and " +
 			"its predecessor, the 4690K share the same basic configuration and disappointingly, " +
@@ -174,7 +175,7 @@ qa1Rm8Zr+V0+VCp9swcCAwEAAQ==
 	product5 := products.Product{
 		Brand:   "Asus",
 		Name:    "Z170 Pro Gaming",
-		Barcode: "",
+		Barcode: "4712900114874",
 		Price:   164.91,
 		Description: "High-value, feature-packed, performance-optimized Z170 ATX board LGA1151 " +
 			"socket for 6th Gen Intel® Core™ Desktop Processors.\n- Dual DDR4 3400 (OC) support\n- " +
@@ -190,49 +191,76 @@ qa1Rm8Zr+V0+VCp9swcCAwEAAQ==
 		return ex
 	}
 
+	product6 := products.Product{
+		Brand:    "Motorola",
+		Name:     "Moto G5 Plus 5.2\" 32GB Dual SIM",
+		Price:    279.90,
+		Barcode:  "6947681540651",
+		ImageUri: "http://www.mobilewithprices.com/products/motorola-moto-g5-Plus.jpg",
+		Description: "* OUTSTANDING CAMERAS *\nThe 12 MP rear camera focuses up to 60% faster than " +
+			"ever before. Switch to the wide-angle front camera for group selfies.\n* PRECISION-CRAFTED " +
+			"METAL DESIGN *\nOne of the first new Moto G phones made from high-grade aluminum, it " +
+			"looks as great as it performs.\n* FUEL UP FAST *\nAll-day battery and up to 6 hours of " +
+			"battery life in just 15 minutes with TurboPower charging.\n* FAST OCTA-CORE PROCESSOR\n" +
+			"Apps run smoothly thanks to a blazing-fast Qualcomm® Snapdragon™ 2.0 GHz octa-core " +
+			"processor.\n* FINGERPRINT READER *\nInstantly unlock your phone. No passcode required.\n" +
+			"* MOTO EXPERIENCES *\nGet shortcuts to the features you use most, like turning on the " +
+			"camera with a twist of your wrist.",
+	}
+
+	if ex := database.Save(&product6).Error; ex != nil {
+		return ex
+	}
+
 	order1 := &orders.Order{
-		Valid:    true,
-		Customer: &user2,
+		Status:   1,
+		Customer: user2.ID,
 		Products: []products.Product{product1},
 	}
 
-	order1.Token, _ = orders.GenerateHashId(order1)
+	if ex := database.Save(&order1).Error; ex != nil {
+		return ex
+	}
+
+	order1.Token, _ = orders.GenerateToken(order1)
 
 	if ex := database.Save(&order1).Error; ex != nil {
 		return ex
 	}
 
 	order2 := &orders.Order{
-		Valid:    false,
-		Customer: &user1,
+		Status:   0,
+		Customer: user1.ID,
 		Products: []products.Product{product2},
 	}
-
-	order2.Token, _ = orders.GenerateHashId(order2)
 
 	if ex := database.Save(&order2).Error; ex != nil {
 		return ex
 	}
 
 	order3 := &orders.Order{
-		Valid:    true,
-		Customer: &user2,
+		Status:   1,
+		Customer: user2.ID,
 		Products: []products.Product{product4, product5},
 	}
 
-	order3.Token, _ = orders.GenerateHashId(order3)
+	if ex := database.Save(&order3).Error; ex != nil {
+		return ex
+	}
+
+	order3.Token, _ = orders.GenerateToken(order3)
 
 	if ex := database.Save(&order3).Error; ex != nil {
 		return ex
 	}
 
 	order4 := &orders.Order{
-		Valid:    true,
-		Customer: &user3,
+		Status:   1,
+		Customer: user3.ID,
 		Products: []products.Product{product3},
 	}
 
-	order4.Token, _ = orders.GenerateHashId(order4)
+	order4.Token, _ = orders.GenerateToken(order4)
 
 	return database.Save(&order4).Error
 }

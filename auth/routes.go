@@ -1,8 +1,8 @@
 package auth
 
 import (
-	"github.com/appleboy/gin-jwt"
 	"github.com/gin-gonic/gin"
+	"github.com/appleboy/gin-jwt"
 )
 
 func InitializeRoutes(middleware *jwt.GinJWTMiddleware, router *gin.Engine) {

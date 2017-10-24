@@ -5,13 +5,14 @@ import (
 	"os"
 	"log"
 	"time"
-	"github.com/appleboy/gin-jwt"
+	_ "github.com/lib/pq"
+	"github.com/jinzhu/gorm"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
-	"github.com/jinzhu/gorm"
-	_ "github.com/lib/pq"
+	"github.com/appleboy/gin-jwt"
 	"github.com/marques999/acme-server/admin"
 	"github.com/marques999/acme-server/auth"
+	"github.com/marques999/acme-server/common"
 	"github.com/marques999/acme-server/customers"
 	"github.com/marques999/acme-server/orders"
 	"github.com/marques999/acme-server/products"
@@ -39,9 +40,9 @@ func main() {
 	}
 
 	defer database.Close()
+	customers.Migrate(database)
 	products.Migrate(database)
 	orders.Migrate(database)
-	customers.Migrate(database)
 	middleware := getAuthenticator(database)
 	router := gin.Default()
 	auth.InitializeRoutes(middleware, router)
@@ -52,11 +53,20 @@ func main() {
 	router.Run(getEnvOrDefault("ACME_HOSTNAME", ":3333"))
 }
 
+func getEnvOrDefault(variableKey string, defaultValue string) string {
+
+	if lookupValue, exists := os.LookupEnv(variableKey); exists {
+		return lookupValue
+	} else {
+		return defaultValue
+	}
+}
+
 func getAuthenticator(database *gorm.DB) *jwt.GinJWTMiddleware {
 
 	return &jwt.GinJWTMiddleware{
-		Realm:      "test zone",
-		Key:        []byte("secret key"),
+		Realm:      common.AuthenticationRealm,
+		Key:        []byte(common.RamenRecipe),
 		Timeout:    time.Hour,
 		MaxRefresh: time.Hour,
 		Unauthorized: func(context *gin.Context, statusCode int, message string) {
@@ -68,14 +78,5 @@ func getAuthenticator(database *gorm.DB) *jwt.GinJWTMiddleware {
 		TokenLookup:   "header:Authorization",
 		TokenHeadName: "Bearer",
 		TimeFunc:      time.Now,
-	}
-}
-
-func getEnvOrDefault(variableKey string, defaultValue string) string {
-
-	if lookupValue, exists := os.LookupEnv(variableKey); exists {
-		return lookupValue
-	} else {
-		return defaultValue
 	}
 }

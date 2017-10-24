@@ -1,234 +1,264 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <dataSource name="acme@localhost">
-  <database-model serializer="dbm" rdbms="POSTGRES" format-version="4.6">
+  <database-model serializer="dbm" rdbms="POSTGRES" format-version="4.7">
     <root id="1"/>
-    <database id="2" parent="1" name="acme">
-      <ObjectId>16413</ObjectId>
+    <database id="2" parent="1" name="postgres">
+      <ObjectId>12938</ObjectId>
+    </database>
+    <database id="3" parent="1" name="acme">
+      <ObjectId>16795</ObjectId>
       <Current>1</Current>
       <Visible>1</Visible>
     </database>
-    <database id="3" parent="1" name="postgres">
-      <ObjectId>12406</ObjectId>
-    </database>
-    <database id="4" parent="1" name="weather_station">
-      <ObjectId>16386</ObjectId>
-    </database>
-    <schema id="5" parent="2" name="public">
+    <role id="4" parent="1" name="acme">
+      <ObjectId>16393</ObjectId>
+      <SuperRole>1</SuperRole>
+      <Inherit>1</Inherit>
+      <CreateRole>1</CreateRole>
+      <CreateDb>1</CreateDb>
+      <CanLogin>1</CanLogin>
+      <ConnectionLimit>-1</ConnectionLimit>
+    </role>
+    <role id="5" parent="1" name="pg_monitor">
+      <ObjectId>3373</ObjectId>
+      <Inherit>1</Inherit>
+      <ConnectionLimit>-1</ConnectionLimit>
+    </role>
+    <role id="6" parent="1" name="pg_read_all_settings">
+      <ObjectId>3374</ObjectId>
+      <Inherit>1</Inherit>
+      <ConnectionLimit>-1</ConnectionLimit>
+    </role>
+    <role id="7" parent="1" name="pg_read_all_stats">
+      <ObjectId>3375</ObjectId>
+      <Inherit>1</Inherit>
+      <ConnectionLimit>-1</ConnectionLimit>
+    </role>
+    <role id="8" parent="1" name="pg_signal_backend">
+      <ObjectId>4200</ObjectId>
+      <Inherit>1</Inherit>
+      <ConnectionLimit>-1</ConnectionLimit>
+    </role>
+    <role id="9" parent="1" name="pg_stat_scan_tables">
+      <ObjectId>3377</ObjectId>
+      <Inherit>1</Inherit>
+      <ConnectionLimit>-1</ConnectionLimit>
+    </role>
+    <role id="10" parent="1" name="postgres">
+      <ObjectId>10</ObjectId>
+      <SuperRole>1</SuperRole>
+      <Inherit>1</Inherit>
+      <CreateRole>1</CreateRole>
+      <CreateDb>1</CreateDb>
+      <CanLogin>1</CanLogin>
+      <Replication>1</Replication>
+      <ConnectionLimit>-1</ConnectionLimit>
+      <BypassRls>1</BypassRls>
+    </role>
+    <schema id="11" parent="3" name="public">
       <ObjectId>2200</ObjectId>
-      <IntrospectionTimestamp>2017-10-14.15:45:42.716</IntrospectionTimestamp>
-      <IntrospectionStateNumber>713</IntrospectionStateNumber>
+      <IntrospectionTimestamp>2017-10-24.15:49:45.468</IntrospectionTimestamp>
+      <IntrospectionStateNumber>784</IntrospectionStateNumber>
       <Current>1</Current>
       <Visible>1</Visible>
     </schema>
-    <schema id="6" parent="2" name="pg_catalog">
+    <schema id="12" parent="3" name="pg_catalog">
       <ObjectId>11</ObjectId>
     </schema>
-    <schema id="7" parent="2" name="pg_toast">
+    <schema id="13" parent="3" name="pg_toast">
       <ObjectId>99</ObjectId>
     </schema>
-    <schema id="8" parent="2" name="pg_temp_1">
-      <ObjectId>11848</ObjectId>
+    <schema id="14" parent="3" name="pg_temp_1">
+      <ObjectId>11736</ObjectId>
     </schema>
-    <schema id="9" parent="2" name="pg_toast_temp_1">
-      <ObjectId>11849</ObjectId>
+    <schema id="15" parent="3" name="pg_toast_temp_1">
+      <ObjectId>11737</ObjectId>
     </schema>
-    <schema id="10" parent="2" name="information_schema">
-      <ObjectId>12118</ObjectId>
+    <schema id="16" parent="3" name="information_schema">
+      <ObjectId>12648</ObjectId>
     </schema>
-    <sequence id="11" parent="5" name="credit_cards_id_seq">
-      <ObjectId>16781</ObjectId>
-      <StateNumber>705</StateNumber>
-      <SequenceIdentity>1</SequenceIdentity>
+    <sequence id="17" parent="11" name="credit_cards_id_seq">
+      <ObjectId>16796</ObjectId>
+      <StateNumber>776</StateNumber>
+      <SequenceIdentity>1..2147483647</SequenceIdentity>
       <BelongsToColumn>1</BelongsToColumn>
+      <CacheSize>1</CacheSize>
+      <DataType>integer</DataType>
     </sequence>
-    <sequence id="12" parent="5" name="customers_id_seq">
+    <sequence id="18" parent="11" name="customers_id_seq">
       <ObjectId>16807</ObjectId>
-      <StateNumber>711</StateNumber>
-      <SequenceIdentity>1</SequenceIdentity>
+      <StateNumber>777</StateNumber>
+      <SequenceIdentity>1..2147483647</SequenceIdentity>
       <BelongsToColumn>1</BelongsToColumn>
+      <CacheSize>1</CacheSize>
+      <DataType>integer</DataType>
     </sequence>
-    <sequence id="13" parent="5" name="products_id_seq">
-      <ObjectId>16793</ObjectId>
-      <StateNumber>707</StateNumber>
-      <SequenceIdentity>1</SequenceIdentity>
+    <sequence id="19" parent="11" name="orders_id_seq">
+      <ObjectId>16847</ObjectId>
+      <StateNumber>783</StateNumber>
+      <SequenceIdentity>1..2147483647</SequenceIdentity>
       <BelongsToColumn>1</BelongsToColumn>
+      <CacheSize>1</CacheSize>
+      <DataType>integer</DataType>
     </sequence>
-    <table id="14" parent="5" name="credit_cards">
-      <ObjectId>16783</ObjectId>
-      <StateNumber>713</StateNumber>
+    <sequence id="20" parent="11" name="products_id_seq">
+      <ObjectId>16827</ObjectId>
+      <StateNumber>779</StateNumber>
+      <SequenceIdentity>1..2147483647</SequenceIdentity>
+      <BelongsToColumn>1</BelongsToColumn>
+      <CacheSize>1</CacheSize>
+      <DataType>integer</DataType>
+    </sequence>
+    <table id="21" parent="11" name="credit_cards">
+      <ObjectId>16798</ObjectId>
+      <StateNumber>778</StateNumber>
     </table>
-    <table id="15" parent="5" name="customers">
+    <table id="22" parent="11" name="customers">
       <ObjectId>16809</ObjectId>
-      <StateNumber>713</StateNumber>
+      <StateNumber>784</StateNumber>
     </table>
-    <table id="16" parent="5" name="products">
-      <ObjectId>16795</ObjectId>
-      <StateNumber>707</StateNumber>
+    <table id="23" parent="11" name="order_products">
+      <ObjectId>16842</ObjectId>
+      <StateNumber>782</StateNumber>
     </table>
-    <column id="17" parent="14" name="id">
+    <table id="24" parent="11" name="orders">
+      <ObjectId>16849</ObjectId>
+      <StateNumber>784</StateNumber>
+    </table>
+    <table id="25" parent="11" name="products">
+      <ObjectId>16829</ObjectId>
+      <StateNumber>779</StateNumber>
+    </table>
+    <column id="26" parent="21" name="id">
       <Position>1</Position>
       <DataType>integer|0</DataType>
       <NotNull>1</NotNull>
-      <StateNumber>705</StateNumber>
-      <SequenceName>credit_cards_id_seq</SequenceName>
+      <StateNumber>776</StateNumber>
       <DefaultExpression>nextval(&apos;credit_cards_id_seq&apos;::regclass)</DefaultExpression>
+      <SequenceName>credit_cards_id_seq</SequenceName>
     </column>
-    <column id="18" parent="14" name="created_at">
+    <column id="27" parent="21" name="type">
       <Position>2</Position>
-      <DataType>timestamp with time zone|0</DataType>
-      <StateNumber>705</StateNumber>
+      <DataType>text|0</DataType>
+      <NotNull>1</NotNull>
+      <StateNumber>776</StateNumber>
     </column>
-    <column id="19" parent="14" name="updated_at">
+    <column id="28" parent="21" name="number">
       <Position>3</Position>
-      <DataType>timestamp with time zone|0</DataType>
-      <StateNumber>705</StateNumber>
+      <DataType>text|0</DataType>
+      <NotNull>1</NotNull>
+      <StateNumber>776</StateNumber>
     </column>
-    <column id="20" parent="14" name="deleted_at">
+    <column id="29" parent="21" name="validity">
       <Position>4</Position>
       <DataType>timestamp with time zone|0</DataType>
-      <StateNumber>705</StateNumber>
-    </column>
-    <column id="21" parent="14" name="type">
-      <Position>5</Position>
-      <DataType>text|0</DataType>
       <NotNull>1</NotNull>
-      <StateNumber>705</StateNumber>
+      <StateNumber>776</StateNumber>
     </column>
-    <column id="22" parent="14" name="number">
-      <Position>6</Position>
-      <DataType>text|0</DataType>
-      <NotNull>1</NotNull>
-      <StateNumber>705</StateNumber>
-    </column>
-    <column id="23" parent="14" name="validity">
-      <Position>7</Position>
-      <DataType>timestamp with time zone|0</DataType>
-      <NotNull>1</NotNull>
-      <StateNumber>705</StateNumber>
-    </column>
-    <index id="24" parent="14" name="credit_cards_pkey">
-      <ObjectId>16790</ObjectId>
+    <index id="30" parent="21" name="credit_cards_pkey">
+      <ObjectId>16805</ObjectId>
       <ColNames>id</ColNames>
       <Unique>1</Unique>
     </index>
-    <index id="25" parent="14" name="idx_credit_cards_deleted_at">
-      <ObjectId>16792</ObjectId>
-      <ColNames>deleted_at</ColNames>
-    </index>
-    <key id="26" parent="14" name="credit_cards_pkey">
-      <ObjectId>16791</ObjectId>
+    <key id="31" parent="21" name="credit_cards_pkey">
+      <ObjectId>16806</ObjectId>
       <ColNames>id</ColNames>
       <UnderlyingIndexName>credit_cards_pkey</UnderlyingIndexName>
       <Primary>1</Primary>
     </key>
-    <column id="27" parent="15" name="id">
+    <column id="32" parent="22" name="id">
       <Position>1</Position>
       <DataType>integer|0</DataType>
       <NotNull>1</NotNull>
-      <StateNumber>711</StateNumber>
-      <SequenceName>customers_id_seq</SequenceName>
+      <StateNumber>777</StateNumber>
       <DefaultExpression>nextval(&apos;customers_id_seq&apos;::regclass)</DefaultExpression>
+      <SequenceName>customers_id_seq</SequenceName>
     </column>
-    <column id="28" parent="15" name="created_at">
+    <column id="33" parent="22" name="created_at">
       <Position>2</Position>
       <DataType>timestamp with time zone|0</DataType>
-      <StateNumber>711</StateNumber>
+      <NotNull>1</NotNull>
+      <StateNumber>777</StateNumber>
+      <DefaultExpression>CURRENT_TIMESTAMP</DefaultExpression>
     </column>
-    <column id="29" parent="15" name="updated_at">
+    <column id="34" parent="22" name="updated_at">
       <Position>3</Position>
       <DataType>timestamp with time zone|0</DataType>
-      <StateNumber>711</StateNumber>
+      <NotNull>1</NotNull>
+      <StateNumber>777</StateNumber>
+      <DefaultExpression>CURRENT_TIMESTAMP</DefaultExpression>
     </column>
-    <column id="30" parent="15" name="deleted_at">
+    <column id="35" parent="22" name="name">
       <Position>4</Position>
-      <DataType>timestamp with time zone|0</DataType>
-      <StateNumber>711</StateNumber>
-    </column>
-    <column id="31" parent="15" name="name">
-      <Position>5</Position>
-      <DataType>varchar(255)|0</DataType>
-      <StateNumber>711</StateNumber>
-    </column>
-    <column id="32" parent="15" name="password">
-      <Position>6</Position>
-      <DataType>varchar(32)|0</DataType>
-      <NotNull>1</NotNull>
-      <StateNumber>711</StateNumber>
-    </column>
-    <column id="33" parent="15" name="username">
-      <Position>7</Position>
-      <DataType>varchar(32)|0</DataType>
-      <NotNull>1</NotNull>
-      <StateNumber>711</StateNumber>
-    </column>
-    <column id="34" parent="15" name="email">
-      <Position>8</Position>
-      <DataType>varchar(255)|0</DataType>
-      <NotNull>1</NotNull>
-      <StateNumber>711</StateNumber>
-    </column>
-    <column id="35" parent="15" name="address">
-      <Position>9</Position>
       <DataType>text|0</DataType>
       <NotNull>1</NotNull>
-      <StateNumber>711</StateNumber>
+      <StateNumber>777</StateNumber>
     </column>
-    <column id="36" parent="15" name="tax_number">
-      <Position>10</Position>
-      <DataType>varchar(9)|0</DataType>
+    <column id="36" parent="22" name="public_key">
+      <Position>5</Position>
+      <DataType>text|0</DataType>
       <NotNull>1</NotNull>
-      <StateNumber>711</StateNumber>
+      <StateNumber>777</StateNumber>
     </column>
-    <column id="37" parent="15" name="country">
-      <Position>11</Position>
+    <column id="37" parent="22" name="password">
+      <Position>6</Position>
+      <DataType>text|0</DataType>
+      <NotNull>1</NotNull>
+      <StateNumber>777</StateNumber>
+    </column>
+    <column id="38" parent="22" name="username">
+      <Position>7</Position>
+      <DataType>text|0</DataType>
+      <NotNull>1</NotNull>
+      <StateNumber>777</StateNumber>
+    </column>
+    <column id="39" parent="22" name="address">
+      <Position>8</Position>
+      <DataType>text|0</DataType>
+      <NotNull>1</NotNull>
+      <StateNumber>777</StateNumber>
+    </column>
+    <column id="40" parent="22" name="tax_number">
+      <Position>9</Position>
+      <DataType>varchar(9)|0</DataType>
+      <StateNumber>777</StateNumber>
+    </column>
+    <column id="41" parent="22" name="country">
+      <Position>10</Position>
       <DataType>varchar(2)|0</DataType>
       <NotNull>1</NotNull>
-      <StateNumber>711</StateNumber>
+      <StateNumber>777</StateNumber>
     </column>
-    <column id="38" parent="15" name="credit_card_id">
-      <Position>12</Position>
+    <column id="42" parent="22" name="credit_card_id">
+      <Position>11</Position>
       <DataType>integer|0</DataType>
-      <StateNumber>711</StateNumber>
+      <StateNumber>777</StateNumber>
     </column>
-    <index id="39" parent="15" name="customers_pkey">
-      <ObjectId>16816</ObjectId>
+    <index id="43" parent="22" name="customers_pkey">
+      <ObjectId>16818</ObjectId>
       <ColNames>id</ColNames>
       <Unique>1</Unique>
     </index>
-    <index id="40" parent="15" name="customers_username_key">
-      <ObjectId>16818</ObjectId>
+    <index id="44" parent="22" name="customers_username_key">
+      <ObjectId>16820</ObjectId>
       <ColNames>username</ColNames>
       <Unique>1</Unique>
     </index>
-    <index id="41" parent="15" name="customers_email_key">
-      <ObjectId>16820</ObjectId>
-      <ColNames>email</ColNames>
-      <Unique>1</Unique>
-    </index>
-    <index id="42" parent="15" name="idx_customers_deleted_at">
-      <ObjectId>16822</ObjectId>
-      <ColNames>deleted_at</ColNames>
-    </index>
-    <key id="43" parent="15" name="customers_pkey">
-      <ObjectId>16817</ObjectId>
+    <key id="45" parent="22" name="customers_pkey">
+      <ObjectId>16819</ObjectId>
       <ColNames>id</ColNames>
       <UnderlyingIndexName>customers_pkey</UnderlyingIndexName>
       <Primary>1</Primary>
     </key>
-    <key id="44" parent="15" name="customers_username_key">
-      <ObjectId>16819</ObjectId>
+    <key id="46" parent="22" name="customers_username_key">
+      <ObjectId>16821</ObjectId>
       <ColNames>username</ColNames>
       <UnderlyingIndexName>customers_username_key</UnderlyingIndexName>
     </key>
-    <key id="45" parent="15" name="customers_email_key">
-      <ObjectId>16821</ObjectId>
-      <ColNames>email</ColNames>
-      <UnderlyingIndexName>customers_email_key</UnderlyingIndexName>
-    </key>
-    <foreign-key id="46" parent="15" name="customers_credit_card_id_credit_cards_id_foreign">
-      <ObjectId>16823</ObjectId>
+    <foreign-key id="47" parent="22" name="customers_credit_card_id_credit_cards_id_foreign">
+      <ObjectId>16822</ObjectId>
       <ColNames>credit_card_id</ColNames>
-      <RefTableId>16783</RefTableId>
+      <RefTableId>16798</RefTableId>
       <RefColPositions>1</RefColPositions>
       <RefTableName>credit_cards</RefTableName>
       <RefKeyName>credit_cards_pkey</RefKeyName>
@@ -236,73 +266,169 @@
       <OnDelete>cascade</OnDelete>
       <OnUpdate>cascade</OnUpdate>
     </foreign-key>
-    <column id="47" parent="16" name="id">
+    <column id="48" parent="23" name="order_id">
       <Position>1</Position>
       <DataType>integer|0</DataType>
       <NotNull>1</NotNull>
-      <StateNumber>707</StateNumber>
-      <SequenceName>products_id_seq</SequenceName>
-      <DefaultExpression>nextval(&apos;products_id_seq&apos;::regclass)</DefaultExpression>
+      <StateNumber>782</StateNumber>
     </column>
-    <column id="48" parent="16" name="created_at">
+    <column id="49" parent="23" name="product_id">
+      <Position>2</Position>
+      <DataType>integer|0</DataType>
+      <NotNull>1</NotNull>
+      <StateNumber>782</StateNumber>
+    </column>
+    <index id="50" parent="23" name="order_products_pkey">
+      <ObjectId>16845</ObjectId>
+      <ColNames>order_id
+product_id</ColNames>
+      <Unique>1</Unique>
+    </index>
+    <key id="51" parent="23" name="order_products_pkey">
+      <ObjectId>16846</ObjectId>
+      <ColNames>order_id
+product_id</ColNames>
+      <UnderlyingIndexName>order_products_pkey</UnderlyingIndexName>
+      <Primary>1</Primary>
+    </key>
+    <column id="52" parent="24" name="id">
+      <Position>1</Position>
+      <DataType>integer|0</DataType>
+      <NotNull>1</NotNull>
+      <StateNumber>783</StateNumber>
+      <DefaultExpression>nextval(&apos;orders_id_seq&apos;::regclass)</DefaultExpression>
+      <SequenceName>orders_id_seq</SequenceName>
+    </column>
+    <column id="53" parent="24" name="created_at">
       <Position>2</Position>
       <DataType>timestamp with time zone|0</DataType>
-      <StateNumber>707</StateNumber>
+      <NotNull>1</NotNull>
+      <StateNumber>783</StateNumber>
+      <DefaultExpression>CURRENT_TIMESTAMP</DefaultExpression>
     </column>
-    <column id="49" parent="16" name="updated_at">
+    <column id="54" parent="24" name="updated_at">
       <Position>3</Position>
       <DataType>timestamp with time zone|0</DataType>
-      <StateNumber>707</StateNumber>
-    </column>
-    <column id="50" parent="16" name="deleted_at">
-      <Position>4</Position>
-      <DataType>timestamp with time zone|0</DataType>
-      <StateNumber>707</StateNumber>
-    </column>
-    <column id="51" parent="16" name="name">
-      <Position>5</Position>
-      <DataType>text|0</DataType>
       <NotNull>1</NotNull>
-      <StateNumber>707</StateNumber>
+      <StateNumber>783</StateNumber>
+      <DefaultExpression>CURRENT_TIMESTAMP</DefaultExpression>
     </column>
-    <column id="52" parent="16" name="description">
+    <column id="55" parent="24" name="customer">
+      <Position>4</Position>
+      <DataType>integer|0</DataType>
+      <NotNull>1</NotNull>
+      <StateNumber>783</StateNumber>
+    </column>
+    <column id="56" parent="24" name="valid">
+      <Position>5</Position>
+      <DataType>boolean|0</DataType>
+      <NotNull>1</NotNull>
+      <StateNumber>783</StateNumber>
+      <DefaultExpression>false</DefaultExpression>
+    </column>
+    <column id="57" parent="24" name="token">
       <Position>6</Position>
       <DataType>text|0</DataType>
       <NotNull>1</NotNull>
-      <StateNumber>707</StateNumber>
+      <StateNumber>783</StateNumber>
+      <DefaultExpression>false</DefaultExpression>
     </column>
-    <column id="53" parent="16" name="price">
-      <Position>7</Position>
-      <DataType>numeric|0</DataType>
-      <NotNull>1</NotNull>
-      <StateNumber>707</StateNumber>
-    </column>
-    <column id="54" parent="16" name="barcode">
-      <Position>8</Position>
-      <DataType>text|0</DataType>
-      <NotNull>1</NotNull>
-      <StateNumber>707</StateNumber>
-    </column>
-    <index id="55" parent="16" name="products_pkey">
-      <ObjectId>16802</ObjectId>
+    <index id="58" parent="24" name="orders_pkey">
+      <ObjectId>16860</ObjectId>
       <ColNames>id</ColNames>
       <Unique>1</Unique>
     </index>
-    <index id="56" parent="16" name="uix_products_barcode">
-      <ObjectId>16806</ObjectId>
+    <key id="59" parent="24" name="orders_pkey">
+      <ObjectId>16861</ObjectId>
+      <ColNames>id</ColNames>
+      <UnderlyingIndexName>orders_pkey</UnderlyingIndexName>
+      <Primary>1</Primary>
+    </key>
+    <foreign-key id="60" parent="24" name="orders_customer_customers_id_foreign">
+      <ObjectId>16862</ObjectId>
+      <ColNames>customer</ColNames>
+      <RefTableId>16809</RefTableId>
+      <RefColPositions>1</RefColPositions>
+      <RefTableName>customers</RefTableName>
+      <RefKeyName>customers_pkey</RefKeyName>
+      <RefColNames>id</RefColNames>
+      <OnDelete>cascade</OnDelete>
+      <OnUpdate>cascade</OnUpdate>
+    </foreign-key>
+    <column id="61" parent="25" name="id">
+      <Position>1</Position>
+      <DataType>integer|0</DataType>
+      <NotNull>1</NotNull>
+      <StateNumber>779</StateNumber>
+      <DefaultExpression>nextval(&apos;products_id_seq&apos;::regclass)</DefaultExpression>
+      <SequenceName>products_id_seq</SequenceName>
+    </column>
+    <column id="62" parent="25" name="created_at">
+      <Position>2</Position>
+      <DataType>timestamp with time zone|0</DataType>
+      <NotNull>1</NotNull>
+      <StateNumber>779</StateNumber>
+      <DefaultExpression>CURRENT_TIMESTAMP</DefaultExpression>
+    </column>
+    <column id="63" parent="25" name="updated_at">
+      <Position>3</Position>
+      <DataType>timestamp with time zone|0</DataType>
+      <NotNull>1</NotNull>
+      <StateNumber>779</StateNumber>
+      <DefaultExpression>CURRENT_TIMESTAMP</DefaultExpression>
+    </column>
+    <column id="64" parent="25" name="name">
+      <Position>4</Position>
+      <DataType>text|0</DataType>
+      <NotNull>1</NotNull>
+      <StateNumber>779</StateNumber>
+    </column>
+    <column id="65" parent="25" name="brand">
+      <Position>5</Position>
+      <DataType>text|0</DataType>
+      <NotNull>1</NotNull>
+      <StateNumber>779</StateNumber>
+    </column>
+    <column id="66" parent="25" name="price">
+      <Position>6</Position>
+      <DataType>numeric|0</DataType>
+      <NotNull>1</NotNull>
+      <StateNumber>779</StateNumber>
+    </column>
+    <column id="67" parent="25" name="image_uri">
+      <Position>7</Position>
+      <DataType>text|0</DataType>
+      <NotNull>1</NotNull>
+      <StateNumber>779</StateNumber>
+    </column>
+    <column id="68" parent="25" name="description">
+      <Position>8</Position>
+      <DataType>text|0</DataType>
+      <NotNull>1</NotNull>
+      <StateNumber>779</StateNumber>
+    </column>
+    <column id="69" parent="25" name="barcode">
+      <Position>9</Position>
+      <DataType>text|0</DataType>
+      <NotNull>1</NotNull>
+      <StateNumber>779</StateNumber>
+    </column>
+    <index id="70" parent="25" name="products_pkey">
+      <ObjectId>16838</ObjectId>
+      <ColNames>id</ColNames>
+      <Unique>1</Unique>
+    </index>
+    <index id="71" parent="25" name="uix_products_barcode">
+      <ObjectId>16841</ObjectId>
       <ColNames>barcode</ColNames>
       <Unique>1</Unique>
     </index>
-    <index id="57" parent="16" name="idx_products_deleted_at">
-      <ObjectId>16804</ObjectId>
-      <ColNames>deleted_at</ColNames>
-    </index>
-    <index id="58" parent="16" name="idx_products_barcode">
-      <ObjectId>16805</ObjectId>
+    <index id="72" parent="25" name="idx_products_barcode">
+      <ObjectId>16840</ObjectId>
       <ColNames>barcode</ColNames>
     </index>
-    <key id="59" parent="16" name="products_pkey">
-      <ObjectId>16803</ObjectId>
+    <key id="73" parent="25" name="products_pkey">
+      <ObjectId>16839</ObjectId>
       <ColNames>id</ColNames>
       <UnderlyingIndexName>products_pkey</UnderlyingIndexName>
       <Primary>1</Primary>

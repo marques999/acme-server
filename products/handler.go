@@ -2,39 +2,52 @@ package products
 
 import (
 	"net/http"
-	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
+	"github.com/gin-gonic/gin"
 	"github.com/marques999/acme-server/common"
 )
 
 func List(database *gorm.DB) (int, interface{}) {
+
 	products := []Product{}
 	database.Find(&products)
-	return http.StatusOK, products
-}
+	jsonProducts := make([]map[string]interface{}, len(products))
 
-func Insert(context *gin.Context, database *gorm.DB) (int, interface{}) {
+	for i, product := range products {
 
-	product := Product{}
-
-	if ex := context.Bind(&product); ex != nil {
-		return http.StatusBadRequest, common.JSON(ex)
-	} else if ex := database.Save(&product).Error; ex != nil {
-		return http.StatusInternalServerError, common.JSON(ex)
-	} else {
-		return http.StatusCreated, product
+		jsonProducts[i] = gin.H{
+			"name":    product.Name,
+			"brand":   product.Brand,
+			"price":   product.Price,
+			"barcode": product.Barcode,
+			"uri":     product.ImageUri,
+		}
 	}
+
+	return http.StatusOK, jsonProducts
 }
 
 func Find(context *gin.Context, database *gorm.DB) (int, interface{}) {
 
-	product := Product{}
+	barcode, paramExists := context.Params.Get("id")
 
-	if id, exists := context.Params.Get("id"); exists == false {
+	if paramExists == false {
 		return http.StatusBadRequest, common.MissingParameter()
-	} else if ex := database.First(&product, "barcode = ?", id).Error; ex != nil {
-		return http.StatusNotFound, common.JSON(ex)
-	} else {
-		return http.StatusOK, product
+	}
+
+	product := Product{}
+	dbException := database.First(&product, "barcode = ?", barcode).Error
+
+	if dbException != nil {
+		return http.StatusNotFound, common.JSON(dbException)
+	}
+
+	return http.StatusOK, gin.H{
+		"name":        product.Name,
+		"brand":       product.Brand,
+		"price":       product.Price,
+		"barcode":     product.Barcode,
+		"uri":         product.ImageUri,
+		"description": product.Description,
 	}
 }
