@@ -8,7 +8,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/speps/go-hashids"
 	"github.com/marques999/acme-server/common"
-	"github.com/marques999/acme-server/products"
 )
 
 func encodeSha1(payload []byte) []byte {
@@ -33,6 +32,19 @@ func getQueryOptions(orderId string, customer string) map[string]interface{} {
 	}
 }
 
+func (order *Order) generateJson(customerCart []CustomerCartJSON) *OrderJSON {
+
+	return &OrderJSON{
+		Token:     order.Token,
+		Total:     order.Total,
+		Status:    order.Status,
+		Customer:  order.Customer,
+		CreatedAt: order.CreatedAt,
+		UpdatedAt: order.UpdatedAt,
+		Products:  customerCart,
+	}
+}
+
 func decodePublicKey(pemCertificate string) (key *rsa.PublicKey) {
 
 	keyBlock, _ := pem.Decode([]byte(pemCertificate))
@@ -53,18 +65,18 @@ func decodePublicKey(pemCertificate string) (key *rsa.PublicKey) {
 	return nil
 }
 
-func CalculateTotal(customerCart []products.Product) float64 {
+func calculateTotal(customerCart []CustomerCartJSON) float64 {
 
 	var orderTotal = 0.0
 
 	for _, product := range customerCart {
-		orderTotal += product.Price
+		orderTotal += product.Product.Price
 	}
 
 	return orderTotal
 }
 
-func GenerateToken(order *Order) (string, error) {
+func (order *Order) generateToken() (string, error) {
 
 	hashData := hashids.NewData()
 	hashData.MinLength = 8
@@ -87,6 +99,5 @@ func generateJson(order Order) map[string]interface{} {
 		"status":   order.Status,
 		"created":  order.CreatedAt,
 		"modified": order.UpdatedAt,
-		"products": order.Products,
 	}
 }

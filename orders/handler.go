@@ -1,22 +1,13 @@
 package orders
 
 import (
-	"crypto"
-	"crypto/rsa"
-	"encoding/base64"
-	"encoding/json"
-	"math/rand"
 	"net/http"
-	"time"
-	"github.com/jinzhu/gorm"
 	"github.com/gin-gonic/gin"
-	"github.com/marques999/acme-server/common"
-	"github.com/marques999/acme-server/customers"
-	"github.com/marques999/acme-server/products"
+	"github.com/jmoiron/sqlx"
 )
 
-func List(database *gorm.DB, username string) (int, interface{}) {
-
+func LIST(database *sqlx.DB, username string) (int, interface{}) {
+/*
 	orders := []Order{}
 
 	if username == common.AdminAccount {
@@ -31,12 +22,13 @@ func List(database *gorm.DB, username string) (int, interface{}) {
 		jsonOrders[i] = generateJson(order)
 	}
 
-	return http.StatusOK, jsonOrders
+	return http.StatusOK, jsonOrders*/
+	return http.StatusBadRequest, nil
 }
 
-func Checkout(context *gin.Context, database *gorm.DB, username string) (int, interface{}) {
+func PUT(context *gin.Context, database *sqlx.DB, username string) (int, interface{}) {
 
-	orderId, paramExists := context.Params.Get("id")
+	/*orderId, paramExists := context.Params.Get("id")
 
 	if paramExists == false {
 		return http.StatusBadRequest, common.MissingParameter()
@@ -56,12 +48,13 @@ func Checkout(context *gin.Context, database *gorm.DB, username string) (int, in
 		return http.StatusInternalServerError, common.JSON(dbException)
 	}
 
-	return http.StatusOK, generateJson(order)
+	return http.StatusOK, generateJson(order)*/
+	return http.StatusBadRequest, nil
 }
 
-func Insert(context *gin.Context, database *gorm.DB, username string) (int, interface{}) {
+func INSERT(context *gin.Context, database *sqlx.DB, username string) (int, interface{}) {
 
-	orderPOST := OrderPOST{}
+	/*orderPOST := OrderPOST{}
 	bindException := context.Bind(&orderPOST)
 
 	if bindException != nil {
@@ -109,7 +102,7 @@ func Insert(context *gin.Context, database *gorm.DB, username string) (int, inte
 		return http.StatusInternalServerError, common.JSON(dbException)
 	}
 
-	order := Order{Customer: customer.ID, Status: ValidationFailed, Total: CalculateTotal(customerCart)}
+	order := Order{CustomerID: customer.ID, Status: ValidationFailed, Total: CalculateTotal(customerCart)}
 	dbException = database.Create(&order).Association("Products").Append(customerCart).Error
 
 	if dbException != nil {
@@ -134,12 +127,14 @@ func Insert(context *gin.Context, database *gorm.DB, username string) (int, inte
 		return http.StatusInternalServerError, common.JSON(dbException)
 	}
 
-	return http.StatusOK, generateJson(order)
+	return http.StatusOK, generateJson(order)*/
+
+	return http.StatusBadRequest, nil
 }
 
-func Find(context *gin.Context, database *gorm.DB, username string) (int, interface{}) {
+func GET(context *gin.Context, database *sqlx.DB, username string) (int, interface{}) {
 
-	if username != common.AdminAccount {
+	/*if username != common.AdminAccount {
 		return http.StatusUnauthorized, common.PermissionDenied()
 	}
 
@@ -156,12 +151,14 @@ func Find(context *gin.Context, database *gorm.DB, username string) (int, interf
 		return http.StatusNotFound, common.JSON(dbException)
 	}
 
-	return http.StatusCreated, generateJson(order)
+	return http.StatusCreated, generateJson(order)*/
+
+	return http.StatusBadRequest, nil
 }
 
-func Delete(context *gin.Context, database *gorm.DB, username string) (int, interface{}) {
+func DELETE(context *gin.Context, database *sqlx.DB, username string) (int, interface{}) {
 
-	orderId, paramExists := context.Params.Get("id")
+	/*orderId, paramExists := context.Params.Get("id")
 
 	if paramExists == false {
 		return http.StatusBadRequest, common.MissingParameter()
@@ -173,5 +170,7 @@ func Delete(context *gin.Context, database *gorm.DB, username string) (int, inte
 		return http.StatusUnauthorized, common.JSON(dbException)
 	}
 
-	return http.StatusNoContent, nil
+	return http.StatusNoContent, nil*/
+
+	return http.StatusBadRequest, nil
 }

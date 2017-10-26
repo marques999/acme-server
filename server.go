@@ -6,16 +6,16 @@ import (
 	"log"
 	"time"
 	_ "github.com/lib/pq"
-	"github.com/jinzhu/gorm"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	"github.com/appleboy/gin-jwt"
-	"github.com/marques999/acme-server/admin"
 	"github.com/marques999/acme-server/auth"
 	"github.com/marques999/acme-server/common"
 	"github.com/marques999/acme-server/customers"
 	"github.com/marques999/acme-server/orders"
 	"github.com/marques999/acme-server/products"
+	"github.com/jmoiron/sqlx"
+	"github.com/marques999/acme-server/creditcard"
 )
 
 func main() {
@@ -33,20 +33,20 @@ func main() {
 	)
 
 	gin.SetMode(gin.ReleaseMode)
-	database, connectionException := gorm.Open("postgres", psqlConnection)
+	database, connectionException := sqlx.Connect("postgres", psqlConnection)
 
 	if connectionException != nil {
 		log.Fatal(connectionException.Error())
 	}
 
 	defer database.Close()
+	creditcard.Migrate(database)
 	customers.Migrate(database)
 	products.Migrate(database)
 	orders.Migrate(database)
-	middleware := getAuthenticator(database)
 	router := gin.Default()
-	auth.InitializeRoutes(middleware, router)
-	admin.InitializeRoutes(database, router)
+	middleware := getAuthenticator(database)
+	auth.InitializeRoutes(database, middleware, router)
 	customers.InitializeRoutes(database, middleware, router)
 	products.InitializeRoutes(database, middleware, router)
 	orders.InitializeRoutes(database, middleware, router)
@@ -62,7 +62,7 @@ func getEnvOrDefault(variableKey string, defaultValue string) string {
 	}
 }
 
-func getAuthenticator(database *gorm.DB) *jwt.GinJWTMiddleware {
+func getAuthenticator(database *sqlx.DB) *jwt.GinJWTMiddleware {
 
 	return &jwt.GinJWTMiddleware{
 		Realm:      common.AuthenticationRealm,
