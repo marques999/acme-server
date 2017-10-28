@@ -4,153 +4,89 @@ import (
 	"net/http"
 	"github.com/jmoiron/sqlx"
 	"github.com/gin-gonic/gin"
-	"github.com/marques999/acme-server/auth"
+	"golang.org/x/crypto/bcrypt"
 	"github.com/marques999/acme-server/common"
 	"github.com/marques999/acme-server/creditcard"
-	"github.com/Masterminds/squirrel"
 )
 
-func LIST(database *sqlx.DB, username string) (int, interface{}) {
+func Login(database *sqlx.DB, username string, original string) (string, bool) {
+
+	if hashed, errors := validateLogin(database, username); errors != nil {
+		return username, false
+	} else {
+		return username, bcrypt.CompareHashAndPassword([]byte(*hashed), []byte(original)) == nil
+	}
+}
+
+func List(database *sqlx.DB, username string) (int, interface{}) {
 
 	if username != common.AdminAccount {
-		return http.StatusUnauthorized, common.PermissionDenied()
-	}
-
-	customers, sqlException := Query(database)
-
-	if sqlException != nil {
-		return http.StatusInternalServerError, common.JSON(sqlException)
-	}
-
-	jsonCustomers := make([]CustomerJSON, len(customers))
-
-	for index, customer := range customers {
-
-		creditCard, sqlException := creditcard.GetById(database, customer.CreditCardID)
-
-		if sqlException == nil {
-			jsonCustomers[index] = customer.generateJson(creditCard)
-		} else {
-			return http.StatusInternalServerError, common.JSON(sqlException)
-		}
-	}
-
-	return http.StatusOK, jsonCustomers
-}
-
-func GET(context *gin.Context, database *sqlx.DB, username string) (int, interface{}) {
-
-	customerId, paramExists := context.Params.Get("id")
-
-	if paramExists == false {
-		return http.StatusBadRequest, common.MissingParameter()
-	} else if common.HasPermissions(username, customerId) == false {
-		return http.StatusUnauthorized, common.PermissionDenied()
+		return common.PermisssionDenied()
+	} else if customers, errors := getCustomers(database); errors != nil {
+		return http.StatusInternalServerError, common.JSON(errors)
 	} else {
-		return getCustomer(database, customerId)
+		return http.StatusOK, customers
 	}
 }
 
-func POST(context *gin.Context, database *sqlx.DB) (int, interface{}) {
+func Find(context *gin.Context, database *sqlx.DB, username string) (int, interface{}) {
+
+	if id, exists := context.Params.Get("id"); exists == false {
+		return common.MissingParameter()
+	} else if common.HasPermissions(username, id) == false {
+		return common.PermisssionDenied()
+	} else if customer, errors := GetCustomer(database, id); errors != nil {
+		return http.StatusInternalServerError, common.JSON(errors)
+	} else {
+		return http.StatusOK, customer
+	}
+}
+
+func Post(context *gin.Context, database *sqlx.DB) (int, interface{}) {
 
 	customerPOST := CustomerPOST{}
-	jsonException := context.Bind(&customerPOST)
 
-	if jsonException != nil {
-		return http.StatusBadRequest, common.JSON(jsonException)
+	if errors := context.Bind(&customerPOST); errors != nil {
+		return http.StatusBadRequest, common.JSON(errors)
 	} else if customerPOST.Username == common.AdminAccount {
-		return http.StatusUnauthorized, common.PermissionDenied()
-	}
-
-	creditCard, dbException := creditcard.Insert(database, &customerPOST.CreditCard)
-
-	if dbException != nil {
-		return http.StatusInternalServerError, common.JSON(dbException)
-	}
-
-	hashedPassword, hashException := auth.GeneratePassword(customerPOST.Password)
-
-	if hashException != nil {
-		return http.StatusInternalServerError, common.JSON(hashException)
-	}
-
-	customerPOST.Password = hashedPassword
-	customer, sqlException := insertCustomer(database, customerPOST, creditCard.ID)
-
-	if sqlException != nil {
-		return http.StatusInternalServerError, common.JSON(sqlException)
+		return common.PermisssionDenied()
+	} else if creditCard, errors := creditcard.Insert(database, &customerPOST.CreditCard); errors != nil {
+		return http.StatusInternalServerError, common.JSON(errors)
+	} else if customer, errors := insertCustomer(database, customerPOST, creditCard.ID); errors != nil {
+		return http.StatusInternalServerError, common.JSON(errors)
 	} else {
-		return http.StatusOK, customer.generateJson(creditCard)
+		return http.StatusOK, customer.generateDetails(creditCard)
 	}
 }
 
-func PUT(context *gin.Context, database *sqlx.DB, username string) (int, interface{}) {
+func Put(context *gin.Context, database *sqlx.DB, username string) (int, interface{}) {
 
-	customerId, paramExists := context.Params.Get("id")
+	customerPOST := CustomerPOST{}
 
-	if paramExists == false {
-		return http.StatusBadRequest, common.MissingParameter()
-	} else if common.HasPermissions(username, customerId) == false {
-		return http.StatusUnauthorized, common.PermissionDenied()
+	if id, exists := context.Params.Get("id"); exists == false {
+		return common.MissingParameter()
+	} else if common.HasPermissions(username, id) == false {
+		return common.PermisssionDenied()
+	} else if errors := context.Bind(&customerPOST); errors != nil {
+		return http.StatusBadRequest, common.JSON(errors)
+	} else if customer, errors := updateCustomer(database, id, &customerPOST); errors != nil {
+		return http.StatusInternalServerError, common.JSON(errors)
+	} else if creditCard, errors := creditcard.GetById(database, customer.CreditCardID); errors != nil {
+		return http.StatusInternalServerError, common.JSON(errors)
+	} else {
+		return http.StatusOK, customer.generateDetails(creditCard)
 	}
-
-	customerPost := CustomerPOST{}
-	bindException := context.Bind(&customerPost)
-
-	if bindException != nil {
-		return http.StatusBadRequest, common.JSON(bindException)
-	}
-
-	customer, sqlException := Update(database, customerId, &customerPost)
-
-	if sqlException != nil {
-		return http.StatusInternalServerError, common.JSON(sqlException)
-	}
-
-	creditCard, sqlException := creditcard.GetById(database, customer.CreditCardID)
-
-	if sqlException != nil {
-		return http.StatusInternalServerError, common.JSON(sqlException)
-	}
-
-	return http.StatusOK, customer.generateJson(creditCard)
 }
 
-func DELETE(context *gin.Context, database *sqlx.DB, username string) (int, interface{}) {
+func Delete(context *gin.Context, database *sqlx.DB, username string) (int, interface{}) {
 
-	customerId, paramExists := context.Params.Get("id")
-
-	if paramExists == false {
-		return http.StatusBadRequest, common.MissingParameter()
-	} else if common.HasPermissions(username, customerId) == false {
-		return http.StatusUnauthorized, common.PermissionDenied()
-	}
-
-	_, dbException := deleteCustomer(database, username)
-
-	if dbException != nil {
-		return http.StatusInternalServerError, common.JSON(dbException)
+	if id, exists := context.Params.Get("id"); exists == false {
+		return common.MissingParameter()
+	} else if common.HasPermissions(username, id) == false {
+		return common.PermisssionDenied()
+	} else if _, errors := deleteCustomer(database, id); errors != nil {
+		return http.StatusInternalServerError, common.JSON(errors)
 	} else {
 		return http.StatusNoContent, nil
-	}
-}
-
-func Authenticate(database *sqlx.DB, username string, password string) (string, bool) {
-
-	sqlQuery, sqlArgs, sqlException := common.StatementBuilder().Select(Password).From(Customers).Where(
-		squirrel.Eq{Username: username},
-	).Limit(1).ToSql()
-
-	if sqlException != nil {
-		return username, false
-	}
-
-	customer := Customer{}
-	sqlException = database.Get(&customer, sqlQuery, sqlArgs...)
-
-	if sqlException != nil {
-		return username, false
-	} else {
-		return username, auth.VerifyPassword(customer.Password, password) == nil
 	}
 }

@@ -5,11 +5,18 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
+const (
+	Type        = "type"
+	Number      = "number"
+	Validity    = "validity"
+	CreditCards = "credit_cards"
+)
+
 type CreditCard struct {
-	ID       int       `db:"id"`
-	Type     string    `db:"type"`
-	Number   string    `db:"number"`
-	Validity time.Time `db:"validity"`
+	ID       int
+	Type     string
+	Number   string
+	Validity time.Time
 }
 
 type CreditCardJSON struct {
@@ -20,12 +27,12 @@ type CreditCardJSON struct {
 
 func Migrate(database *sqlx.DB) {
 
-	if _, sqlException := database.Exec(`CREATE TABLE credit_cards(
+	if _, errors := database.Exec(`CREATE TABLE credit_cards(
 		id serial NOT NULL CONSTRAINT credit_cards_pkey PRIMARY KEY,
 		type TEXT NOT NULL,
 		number TEXT NOT NULL,
 		validity timestamp WITH time zone DEFAULT CURRENT_TIMESTAMP NOT NULL)
-	`); sqlException == nil {
+	`); errors == nil {
 
 		Insert(database, &CreditCardJSON{
 			Type:     "VISA",

@@ -4,6 +4,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/gin-gonic/gin"
 	"github.com/appleboy/gin-jwt"
+	"github.com/marques999/acme-server/common"
 )
 
 func InitializeRoutes(database *sqlx.DB, middleware *jwt.GinJWTMiddleware, router *gin.Engine) {
@@ -12,24 +13,24 @@ func InitializeRoutes(database *sqlx.DB, middleware *jwt.GinJWTMiddleware, route
 	{
 		routes.Use(middleware.MiddlewareFunc())
 		{
-			routes.GET("/", func(context *gin.Context) {
-				context.JSON(LIST(database))
+			routes.GET(common.RouteDefault, func(context *gin.Context) {
+				context.JSON(List(database))
 			})
 
-			routes.GET("/:id", func(context *gin.Context) {
-				context.JSON(GET(context, database))
+			routes.POST(common.RouteDefault, func(context *gin.Context) {
+				context.JSON(Insert(context, database, common.ParseId(context)))
 			})
 
-			routes.POST("/", func(context *gin.Context) {
-				context.JSON(Insert(context, database, jwt.ExtractClaims(context)["id"].(string)))
+			routes.GET(common.RouteWithId, func(context *gin.Context) {
+				context.JSON(Find(context, database))
 			})
 
-			routes.PUT("/:id", func(context *gin.Context) {
-				context.JSON(Update(context, database, jwt.ExtractClaims(context)["id"].(string)))
+			routes.PUT(common.RouteWithId, func(context *gin.Context) {
+				context.JSON(Update(context, database, common.ParseId(context)))
 			})
 
-			routes.DELETE("/:id", func(context *gin.Context) {
-				context.JSON(Delete(context, database, jwt.ExtractClaims(context)["id"].(string)))
+			routes.DELETE(common.RouteWithId, func(context *gin.Context) {
+				context.JSON(Delete(context, database, common.ParseId(context)))
 			})
 		}
 	}

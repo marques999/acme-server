@@ -7,89 +7,77 @@ import (
 	"github.com/marques999/acme-server/common"
 )
 
-func getProducts(database *sqlx.DB) ([]Product, error) {
+var preloadList = common.SqlBuilder().Select(
+	Name, Brand, Price, Barcode, ImageUri, Description,
+).From(Products)
 
-	products := []Product{}
-	sqlQuery, sqlArgs, sqlException := common.StatementBuilder().Select("*").From(Products).ToSql()
+func getProducts(database *sqlx.DB) ([]ProductJSON, error) {
 
-	if sqlException != nil {
-		return products, sqlException
+	if query, args, errors := preloadList.ToSql(); errors != nil {
+		return []ProductJSON{}, errors
 	} else {
-		return products, database.Select(&products, sqlQuery, sqlArgs...)
+		var products []ProductJSON
+		return products, database.Select(&products, query, args...)
 	}
 }
 
-func GetProductsByBarcode(database *sqlx.DB, barcodes []string) ([]Product, error) {
+var preloadGet = common.SqlBuilder().Select(
+	Name, Brand, Price, Barcode, ImageUri, Description,
+).From(Products).Limit(1)
 
-	products := []Product{}
+func getProduct(database *sqlx.DB, barcode string) (*ProductJSON, error) {
 
-	sqlQuery, sqlArgs, sqlException := common.StatementBuilder().Select("*").From(Products).Where(
-		squirrel.Eq{Barcode: barcodes},
-	).ToSql()
-
-	if sqlException != nil {
-		return products, sqlException
-	} else {
-		return products, database.Select(&products, sqlQuery, sqlArgs...)
-	}
-}
-
-func getProduct(database *sqlx.DB, barcode string) (*Product, error) {
-
-	sqlQuery, sqlArgs, sqlException := common.StatementBuilder().Select("*").From(Products).Where(
+	if query, args, errors := preloadGet.Where(
 		squirrel.Eq{Barcode: barcode},
-	).Limit(1).ToSql()
-
-	product := Product{}
-
-	if sqlException != nil {
-		return nil, sqlException
+	).ToSql(); errors != nil {
+		return nil, errors
 	} else {
-		return &product, database.Get(&product, sqlQuery, sqlArgs...)
+		var product ProductJSON
+		return &product, database.Get(&product, query, args...)
 	}
 }
+
+var preloadInsert = common.SqlBuilder().Insert(Products).Columns(
+	Name, Brand, Price, Barcode, ImageUri, Description,
+).Suffix(common.ReturningRow)
 
 func insertProduct(database *sqlx.DB, productJson ProductJSON) (*Product, error) {
 
-	sqlQuery, sqlArgs, sqlException := common.StatementBuilder().Insert(Products).Columns(
-		Name, Brand, Price, Barcode, ImageUri, Description,
-	).Values(
+	if query, args, errors := preloadInsert.Values(
 		productJson.Name,
 		productJson.Brand,
 		productJson.Price,
 		productJson.Barcode,
 		productJson.ImageUri,
 		productJson.Description,
-	).Suffix("RETURNING *").ToSql()
-
-	product := Product{}
-
-	if sqlException == nil {
-		return &product, database.Get(&product, sqlQuery, sqlArgs...)
+	).ToSql(); errors != nil {
+		return nil, errors
 	} else {
-		return nil, sqlException
+		var product Product
+		return &product, database.Get(&product, query, args...)
 	}
 }
 
-func updateProduct(db *sqlx.DB, productJson ProductJSON) (*Product, error) {
+var preloadBarcode = common.SqlBuilder().Select("*")
+var preloadDelete = common.SqlBuilder().Delete(Products)
+var preloadUpdate = common.SqlBuilder().Update(Products).Suffix(common.ReturningRow)
 
-	sqlQuery, sqlArgs, sqlException := common.StatementBuilder().Update(Products).SetMap(map[string]interface{}{
+func updateProduct(database *sqlx.DB, barcode string, productJson ProductJSON) (*Product, error) {
+
+	if query, args, errors := preloadUpdate.SetMap(map[string]interface{}{
 		Name:        productJson.Name,
 		Brand:       productJson.Brand,
 		Price:       productJson.Price,
 		ImageUri:    productJson.ImageUri,
 		Description: productJson.Description,
-	}).Suffix("RETURNING *").ToSql()
-
-	product := Product{}
-
-	if sqlException == nil {
-		return nil, sqlException
+	}).Where(squirrel.Eq{Barcode: barcode}).ToSql(); errors != nil {
+		return nil, errors
 	} else {
-		return &product, db.Select(&product, sqlQuery, sqlArgs...)
+		var product Product
+		return &product, database.Get(&product, query, args...)
 	}
 }
 
-func deleteProduct(db *sqlx.DB, barcode string) (sql.Result, error) {
-	return common.StatementBuilder().Delete(Products).Where(squirrel.Eq{Barcode: barcode}).RunWith(db).Exec()
+func deleteProduct(database *sqlx.DB, barcode string) (sql.Result, error) {
+	return preloadDelete.Where(squirrel.Eq{Barcode: barcode}).RunWith(database.DB).Exec()
 }

@@ -1,11 +1,10 @@
 package customers
 
 import (
-	"github.com/jmoiron/sqlx"
-	"github.com/marques999/acme-server/creditcard"
-	"github.com/marques999/acme-server/auth"
-	"github.com/marques999/acme-server/common"
 	"time"
+	"github.com/jmoiron/sqlx"
+	"github.com/marques999/acme-server/common"
+	"github.com/marques999/acme-server/creditcard"
 )
 
 const (
@@ -32,18 +31,18 @@ type Customer struct {
 	PublicKey    string `db:"public_key"`
 	TaxNumber    string `db:"tax_number"`
 	CreditCardID int    `db:"credit_card_id"`
+	CreditCard   creditcard.CreditCard
 }
 
-type CustomerJSON struct {
-	Name       string                    `binding:"required" json:"name"`
-	Country    string                    `binding:"required" json:"country"`
-	Username   string                    `binding:"required" json:"username"`
-	Address1   string                    `binding:"required" json:"address1"`
-	Address2   string                    `binding:"required" json:"address2"`
-	TaxNumber  string                    `binding:"required" json:"tax_number"`
-	CreditCard *creditcard.CreditCardJSON `binding:"required" json:"credit_card"`
-	CreatedAt  time.Time                 `binding:"required" json:"created_at"`
-	UpdatedAt  time.Time                 `binding:"required" json:"updated_at"`
+type CustomerList struct {
+	Name      string    `binding:"required" json:"name"`
+	Country   string    `binding:"required" json:"country"`
+	Username  string    `binding:"required" json:"username"`
+	Address1  string    `binding:"required" json:"address1"`
+	Address2  string    `binding:"required" json:"address2"`
+	TaxNumber string    `binding:"required" json:"tax_number" db:"tax_number"`
+	CreatedAt time.Time `binding:"required" json:"created_at" db:"created_at"`
+	UpdatedAt time.Time `binding:"required" json:"updated_at" db:"updated_at"`
 }
 
 type CustomerPOST struct {
@@ -60,7 +59,7 @@ type CustomerPOST struct {
 
 func Migrate(database *sqlx.DB) {
 
-	if _, sqlException := database.Exec(`CREATE TABLE customers(
+	if _, errors := database.Exec(`CREATE TABLE customers(
 		id serial NOT NULL CONSTRAINT customers_pkey PRIMARY KEY,
 		name TEXT NOT NULL,
 		country VARCHAR(2) NOT NULL,
@@ -75,12 +74,17 @@ func Migrate(database *sqlx.DB) {
 		credit_card_id INTEGER
 			CONSTRAINT fk_customers_credit_card_id
 			REFERENCES credit_cards(id) ON UPDATE CASCADE ON DELETE CASCADE)
-	`); sqlException == nil {
+	`); errors == nil {
+
+		user1Password, _ := common.GeneratePassword("admin")
+		user2Password, _ := common.GeneratePassword("r0wsauce")
+		user3Password, _ := common.GeneratePassword("bighotshaq")
+		user4Password, _ := common.GeneratePassword("skibidipoop")
 
 		insertCustomer(database, CustomerPOST{
 			Name:      "Administrator",
 			Username:  "admin",
-			Password:  auth.KamikazePassword("admin"),
+			Password:  user1Password,
 			TaxNumber: "930248516",
 			Address1:  "Rua Branco, Nº 25",
 			Address2:  "8681-962 Tomar",
@@ -92,7 +96,7 @@ qa1Rm8Zr+V0+VCp9swcCAwEAAQ==`,
 		insertCustomer(database, CustomerPOST{
 			Name:      "Diogo Marques",
 			Username:  "marques999",
-			Password:  auth.KamikazePassword("r0wsauce"),
+			Password:  user2Password,
 			TaxNumber: "761489053",
 			Address1:  "Rua São Diogo, Nº 855",
 			Address2:  "6311-969 Vendas Novas",
@@ -103,7 +107,7 @@ FcVTBd+TBe2sEshVefUCAwEAAQ==`,
 
 		insertCustomer(database, CustomerPOST{
 			Username:  "jabst",
-			Password:  auth.KamikazePassword("bighotshaq"),
+			Password:  user3Password,
 			Name:      "José Teixeira",
 			TaxNumber: "685102439",
 			Address1:  "Avenida Lima, Nº 167",
@@ -116,7 +120,7 @@ FcVTBd+TBe2sEshVefUCAwEAAQ==`,
 		insertCustomer(database, CustomerPOST{
 			Username:  "somouco",
 			Name:      "Carlos Samouco",
-			Password:  auth.KamikazePassword("skibidipap"),
+			Password:  user4Password,
 			TaxNumber: "537812640",
 			Address1:  "Travessa Mia Assunção, Nº 532",
 			Address2:  "5334-964 Coimbra",

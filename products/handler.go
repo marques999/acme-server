@@ -7,55 +7,36 @@ import (
 	"github.com/marques999/acme-server/common"
 )
 
-func LIST(database *sqlx.DB) (int, interface{}) {
+func List(database *sqlx.DB) (int, interface{}) {
 
-	products, sqlException := getProducts(database)
-
-	if sqlException != nil {
-		return http.StatusInternalServerError, sqlException
+	if products, errors := getProducts(database); errors != nil {
+		return http.StatusInternalServerError, errors
+	} else {
+		return http.StatusOK, products
 	}
-
-	productsJson := make([]ProductJSON, len(products))
-
-	for index, product := range products {
-		productsJson[index] = product.GenerateJson()
-	}
-
-	return http.StatusOK, productsJson
 }
 
-func GET(context *gin.Context, database *sqlx.DB) (int, interface{}) {
+func Find(context *gin.Context, database *sqlx.DB) (int, interface{}) {
 
-	barcode, paramExists := context.Params.Get(common.Id)
-
-	if paramExists == false {
-		return http.StatusBadRequest, common.MissingParameter()
+	if barcode, exists := context.Params.Get(common.Id); exists == false {
+		return common.MissingParameter()
+	} else if product, errors := getProduct(database, barcode); errors != nil {
+		return http.StatusNotFound, common.JSON(errors)
+	} else {
+		return http.StatusOK, product
 	}
-
-	product, dbException := getProduct(database, barcode)
-
-	if dbException != nil {
-		return http.StatusNotFound, common.JSON(dbException)
-	}
-
-	return http.StatusOK, product.GenerateJson()
 }
 
 func Insert(context *gin.Context, database *sqlx.DB, username string) (int, interface{}) {
 
 	productJson := ProductJSON{}
-	jsonException := context.Bind(&productJson)
 
-	if jsonException != nil {
-		return http.StatusBadRequest, common.JSON(jsonException)
+	if errors := context.Bind(&productJson); errors != nil {
+		return http.StatusBadRequest, common.JSON(errors)
 	} else if username != common.AdminAccount {
-		return http.StatusUnauthorized, common.PermissionDenied()
-	}
-
-	product, sqlException := insertProduct(database, productJson)
-
-	if sqlException != nil {
-		return http.StatusInternalServerError, common.JSON(sqlException)
+		return common.PermisssionDenied()
+	} else if product, errors := insertProduct(database, productJson); errors != nil {
+		return http.StatusInternalServerError, common.JSON(errors)
 	} else {
 		return http.StatusOK, product.GenerateJson()
 	}
@@ -64,18 +45,15 @@ func Insert(context *gin.Context, database *sqlx.DB, username string) (int, inte
 func Update(context *gin.Context, database *sqlx.DB, username string) (int, interface{}) {
 
 	productJson := ProductJSON{}
-	jsonException := context.Bind(&productJson)
 
-	if jsonException != nil {
-		return http.StatusBadRequest, common.JSON(jsonException)
-	} else if username != common.AdminAccount {
-		return http.StatusUnauthorized, common.PermissionDenied()
-	}
-
-	product, sqlException := updateProduct(database, productJson)
-
-	if sqlException != nil {
-		return http.StatusInternalServerError, common.JSON(sqlException)
+	if barcode, exists := context.Params.Get("id"); exists == false {
+		return common.MissingParameter()
+	} else if errors := context.Bind(&productJson); errors != nil {
+		return http.StatusBadRequest, common.JSON(errors)
+	} else if barcode != productJson.Barcode || username != common.AdminAccount {
+		return common.PermisssionDenied()
+	} else if product, errors := updateProduct(database, barcode, productJson); errors != nil {
+		return http.StatusInternalServerError, common.JSON(errors)
 	} else {
 		return http.StatusOK, product.GenerateJson()
 	}
@@ -83,18 +61,12 @@ func Update(context *gin.Context, database *sqlx.DB, username string) (int, inte
 
 func Delete(context *gin.Context, database *sqlx.DB, username string) (int, interface{}) {
 
-	barcode, paramExists := context.Params.Get("id")
-
-	if paramExists == false {
-		return http.StatusBadRequest, common.MissingParameter()
+	if barcode, exists := context.Params.Get("id"); exists == false {
+		return common.MissingParameter()
 	} else if username != common.AdminAccount {
-		return http.StatusUnauthorized, common.PermissionDenied()
-	}
-
-	_, dbException := deleteProduct(database, barcode)
-
-	if dbException != nil {
-		return http.StatusInternalServerError, common.JSON(dbException)
+		return common.PermisssionDenied()
+	} else if _, errors := deleteProduct(database, barcode); errors != nil {
+		return http.StatusInternalServerError, common.JSON(errors)
 	} else {
 		return http.StatusNoContent, nil
 	}

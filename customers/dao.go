@@ -8,61 +8,70 @@ import (
 	"github.com/marques999/acme-server/common"
 )
 
-func Query(database *sqlx.DB) ([]Customer, error) {
+var preloadList = common.SqlBuilder().Select(
+	Name, Country, Username, Address1, Address2,
+	TaxNumber, common.CreatedAt, common.UpdatedAt,
+).From(Customers)
 
-	customers := []Customer{}
-	sqlQuery, sqlArgs, sqlException := common.StatementBuilder().Select("*").From(Customers).ToSql()
+func getCustomers(database *sqlx.DB) ([]CustomerList, error) {
 
-	if sqlException != nil {
-		return customers, sqlException
+	if query, args, errors := preloadList.ToSql(); errors != nil {
+		return []CustomerList{}, errors
 	} else {
-		return customers, database.Select(&customers, sqlQuery, sqlArgs...)
+		var customers []CustomerList
+		return customers, database.Select(&customers, query, args...)
 	}
 }
 
-func QueryByUsername(database *sqlx.DB, username string) (*Customer, error) {
+var preloadGet = common.SqlBuilder().Select("*").From(Customers).Join(
+	"credit_cards ON credit_cards.id = customers.credit_card_id",
+).Limit(1)
 
-	sqlQuery, sqlArgs, sqlException := common.StatementBuilder().Select(
-		Username, Name, Country, TaxNumber, Address1, Address2, Password, CreditCard,
-	).From(Customers).Where(
-		squirrel.Eq{Username: username},
-	).Limit(1).ToSql()
+func GetCustomer(database *sqlx.DB, username string) (*Customer, error) {
 
-	if sqlException != nil {
-		return nil, sqlException
+	if query, args, errors := preloadGet.Where(squirrel.Eq{Username: username}).ToSql(); errors != nil {
+		return nil, errors
+	} else if result, errors := database.Queryx(query, args...); errors != nil {
+		return nil, errors
 	} else {
-		var customer Customer
-		return &customer, database.Get(&customer, sqlQuery, sqlArgs...)
+		return generateCustomer(result, true), nil
 	}
 }
+
+var preloadInsert = common.SqlBuilder().Insert(Customers).Columns(
+	Name, Country, Username, Password, Address1,
+	Address2, PublicKey, TaxNumber, CreditCard,
+).Suffix(common.ReturningRow)
 
 func insertCustomer(database *sqlx.DB, customerPOST CustomerPOST, creditCardId int) (*Customer, error) {
 
-	sqlQuery, sqlArgs, sqlException := common.StatementBuilder().Insert(Customers).Columns(
-		Name, Country, Username, Password, Address1, Address2, PublicKey, TaxNumber, CreditCard,
-	).Values(
+	if password, errors := common.GeneratePassword(customerPOST.Password); errors != nil {
+		return nil, errors
+	} else if query, args, errors := preloadInsert.Values(
 		customerPOST.Name,
 		customerPOST.Country,
 		customerPOST.Username,
-		customerPOST.Password,
+		password,
 		customerPOST.Address1,
 		customerPOST.Address2,
 		customerPOST.PublicKey,
 		customerPOST.TaxNumber,
 		creditCardId,
-	).Suffix("RETURNING *").ToSql()
-
-	if sqlException != nil {
-		return nil, sqlException
+	).ToSql(); errors != nil {
+		return nil, errors
 	} else {
 		var customer Customer
-		return &customer, database.Get(&customer, sqlQuery, sqlArgs...)
+		return &customer, database.Get(&customer, query, args...)
 	}
 }
 
-func Update(database *sqlx.DB, customerId string, customerPOST *CustomerPOST) (*Customer, error) {
+var preloadDelete = common.SqlBuilder().Delete(Customers)
+var preloadUpdate = common.SqlBuilder().Update(Customers).Suffix(common.ReturningRow)
+var preloadLogin = common.SqlBuilder().Select(Password).From(Customers).Limit(1)
 
-	sqlQuery, sqlArgs, sqlException := common.StatementBuilder().Update(Customers).SetMap(map[string]interface{}{
+func updateCustomer(database *sqlx.DB, username string, customerPOST *CustomerPOST) (*Customer, error) {
+
+	if query, args, errors := preloadUpdate.SetMap(map[string]interface{}{
 		Password:         customerPOST.Password,
 		Address1:         customerPOST.Address1,
 		Address2:         customerPOST.Address2,
@@ -70,21 +79,26 @@ func Update(database *sqlx.DB, customerId string, customerPOST *CustomerPOST) (*
 		Country:          customerPOST.Country,
 		Name:             customerPOST.Name,
 		common.UpdatedAt: time.Now(),
-	}).Where(
-		squirrel.Eq{Username: customerId},
-	).Suffix("RETURNING *").ToSql()
-
-	if sqlException != nil {
-		return nil, sqlException
+	}).Where(squirrel.Eq{Username: username}).ToSql(); errors != nil {
+		return nil, errors
 	} else {
 		var customer Customer
-		return &customer, database.Get(&customer, sqlQuery, sqlArgs...)
+		return &customer, database.Get(&customer, query, args...)
 	}
 }
 
-func deleteCustomer(db *sqlx.DB, username string) (sql.Result, error) {
+func validateLogin(database *sqlx.DB, username string) (*string, error) {
 
-	return common.StatementBuilder().Delete(Customers).Where(
+	if query, args, errors := preloadLogin.Where(
 		squirrel.Eq{Username: username},
-	).RunWith(db).Exec()
+	).ToSql(); errors != nil {
+		return nil, errors
+	} else {
+		var password string
+		return &password, database.Get(&password, query, args...)
+	}
+}
+
+func deleteCustomer(database *sqlx.DB, username string) (sql.Result, error) {
+	return preloadDelete.Where(squirrel.Eq{Username: username}).RunWith(database.DB).Exec()
 }

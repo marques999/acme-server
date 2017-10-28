@@ -6,57 +6,49 @@ import (
 	"github.com/marques999/acme-server/common"
 )
 
-const (
-	Type        = "type"
-	Number      = "number"
-	Validity    = "validity"
-	CreditCards = "credit_cards"
-)
+var preloadGet = common.SqlBuilder().Select("*").From(CreditCards).Limit(1)
+var preloadUpdate = common.SqlBuilder().Update(CreditCards).Suffix(common.ReturningRow)
 
 func GetById(database *sqlx.DB, creditCardId int) (*CreditCard, error) {
 
-	sqlQuery, sqlArgs, sqlException := common.StatementBuilder().Select("*").From(CreditCards).Where(
+	if query, args, errors := preloadGet.Where(
 		squirrel.Eq{common.Id: creditCardId},
-	).Limit(1).ToSql()
-
-	if sqlException != nil {
-		return nil, sqlException
+	).ToSql(); errors != nil {
+		return nil, errors
 	} else {
 		var creditCard CreditCard
-		return &creditCard, database.Get(&creditCard, sqlQuery, sqlArgs...)
+		return &creditCard, database.Get(&creditCard, query, args...)
 	}
 }
 
+var preloadInsert = common.SqlBuilder().Insert(CreditCards).Columns(
+	Type, Number, Validity,
+).Suffix(common.ReturningRow)
+
 func Insert(database *sqlx.DB, creditCardJSON *CreditCardJSON) (*CreditCard, error) {
 
-	sqlQuery, sqlArgs, sqlException := common.StatementBuilder().Insert(CreditCards).Columns(
-		Type, Number, Validity,
-	).Values(
-		creditCardJSON.Type, creditCardJSON.Number, creditCardJSON.Validity,
-	).Suffix("RETURNING *").ToSql()
-
-	if sqlException != nil {
-		return nil, sqlException
+	if query, args, errors := preloadInsert.Values(
+		creditCardJSON.Type,
+		creditCardJSON.Number,
+		creditCardJSON.Validity,
+	).ToSql(); errors != nil {
+		return nil, errors
 	} else {
 		var creditCard CreditCard
-		return &creditCard, database.Get(&creditCard, sqlQuery, sqlArgs...)
+		return &creditCard, database.Get(&creditCard, query, args...)
 	}
 }
 
 func Update(database *sqlx.DB, creditCardId int, creditCardJSON *CreditCardJSON) (*CreditCard, error) {
 
-	sqlQuery, sqlArgs, sqlException := common.StatementBuilder().Update(CreditCards).SetMap(map[string]interface{}{
+	if query, args, errors := preloadUpdate.SetMap(map[string]interface{}{
 		Type:     creditCardJSON.Type,
 		Number:   creditCardJSON.Number,
 		Validity: creditCardJSON.Validity,
-	}).Where(
-		squirrel.Eq{common.Id: creditCardId},
-	).Suffix("RETURNING *").ToSql()
-
-	if sqlException != nil {
-		return nil, sqlException
+	}).Where(squirrel.Eq{common.Id: creditCardId}).ToSql(); errors != nil {
+		return nil, errors
 	} else {
 		var creditCard CreditCard
-		return &creditCard, database.Get(&creditCard, sqlQuery, sqlArgs...)
+		return &creditCard, database.Get(&creditCard, query, args...)
 	}
 }

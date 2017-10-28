@@ -1,79 +1,25 @@
 package orders
 
 import (
-	"crypto/rsa"
-	"crypto/sha1"
-	"crypto/x509"
-	"encoding/pem"
-	"github.com/gin-gonic/gin"
+	"github.com/jmoiron/sqlx"
 	"github.com/speps/go-hashids"
+	"github.com/Masterminds/squirrel"
 	"github.com/marques999/acme-server/common"
+	"github.com/marques999/acme-server/products"
 )
 
-func encodeSha1(payload []byte) []byte {
-
-	sha1Algorithm := sha1.New()
-	sha1Algorithm.Write([]byte(payload))
-
-	return sha1Algorithm.Sum(nil)
-}
-
-func getQueryOptions(orderId string, customer string) map[string]interface{} {
+func getQueryOptions(orderId string, customer string) squirrel.Eq {
 
 	if customer == common.AdminAccount {
-		return map[string]interface{}{
-			"id": orderId,
+		return squirrel.Eq{
+			Token: orderId,
 		}
 	} else {
-		return map[string]interface{}{
-			"id":       orderId,
+		return squirrel.Eq{
+			Token:      orderId,
 			"customer": customer,
 		}
 	}
-}
-
-func (order *Order) generateJson(customerCart []CustomerCartJSON) *OrderJSON {
-
-	return &OrderJSON{
-		Token:     order.Token,
-		Total:     order.Total,
-		Status:    order.Status,
-		Customer:  order.Customer,
-		CreatedAt: order.CreatedAt,
-		UpdatedAt: order.UpdatedAt,
-		Products:  customerCart,
-	}
-}
-
-func decodePublicKey(pemCertificate string) (key *rsa.PublicKey) {
-
-	keyBlock, _ := pem.Decode([]byte(pemCertificate))
-
-	if keyBlock != nil {
-
-		publicKey, cryptoException := x509.ParsePKIXPublicKey(keyBlock.Bytes)
-
-		if cryptoException == nil {
-
-			switch publicKey := publicKey.(type) {
-			case *rsa.PublicKey:
-				return publicKey
-			}
-		}
-	}
-
-	return nil
-}
-
-func calculateTotal(customerCart []CustomerCartJSON) float64 {
-
-	var orderTotal = 0.0
-
-	for _, product := range customerCart {
-		orderTotal += product.Product.Price
-	}
-
-	return orderTotal
 }
 
 func (order *Order) generateToken() (string, error) {
@@ -90,14 +36,53 @@ func (order *Order) generateToken() (string, error) {
 	})
 }
 
-func generateJson(order Order) map[string]interface{} {
+func (order *Order) generateList() *map[string]interface{} {
 
-	return gin.H{
-		"id":       order.ID,
-		"token":    order.Token,
-		"total":    order.Total,
-		"status":   order.Status,
-		"created":  order.CreatedAt,
-		"modified": order.UpdatedAt,
+	return &map[string]interface{}{
+		Status:           order.Status,
+		Count:            order.Count,
+		Total:            order.Total,
+		Customer:         order.Customer,
+		Token:            order.Token,
+		common.CreatedAt: order.CreatedAt,
+		common.UpdatedAt: order.UpdatedAt,
 	}
+}
+
+func (order *Order) generateJson(customerCart []CustomerCartJSON) *map[string]interface{} {
+
+	return &map[string]interface{}{
+		Token:            order.Token,
+		Total:            order.Total,
+		Status:           order.Status,
+		Customer:         order.Customer,
+		Products:         customerCart,
+		common.CreatedAt: order.CreatedAt,
+		common.UpdatedAt: order.UpdatedAt,
+	}
+}
+
+func generateProductOrder(query *sqlx.Rows) CustomerCartJSON {
+
+	var quantity int
+	var product products.Product
+
+	query.Scan(&quantity)
+	query.StructScan(&product)
+
+	return CustomerCartJSON{
+		Quantity: quantity,
+		Product:  product.GenerateJson(),
+	}
+}
+
+func generateCustomerCart(query *sqlx.Rows) []CustomerCartJSON {
+
+	orderProducts := []CustomerCartJSON{}
+
+	for query.Next() {
+		orderProducts = append(orderProducts, generateProductOrder(query))
+	}
+
+	return orderProducts
 }

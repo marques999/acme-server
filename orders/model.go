@@ -2,9 +2,10 @@ package orders
 
 import (
 	"time"
-	"database/sql"
 	"github.com/jmoiron/sqlx"
 	"github.com/marques999/acme-server/common"
+	"github.com/marques999/acme-server/customers"
+	"github.com/marques999/acme-server/creditcard"
 	"github.com/marques999/acme-server/products"
 )
 
@@ -13,10 +14,12 @@ const (
 	ValidationComplete = iota
 	Purchased          = iota
 	Orders             = "orders"
+	Count              = "count"
 	Token              = "token"
 	Total              = "total"
 	Status             = "status"
 	Customer           = "customer"
+	Products           = "products"
 	OrderProducts      = "order_products"
 	OrderID            = "order_products.order_id"
 	ProductID          = "order_products.product_id"
@@ -40,20 +43,11 @@ type CustomerCartJSON struct {
 
 type Order struct {
 	common.Model
-	Total    float64        `db:"total"`
-	Status   int            `db:"status"`
-	Customer string         `db:"customer"`
-	Token    sql.NullString `db:"token"`
-}
-
-type OrderJSON struct {
-	Total     float64            `binding:"required" json:"total"`
-	Status    int                `binding:"required" json:"status"`
-	Customer  string             `binding:"required" json:"customer"`
-	Token     sql.NullString     `binding:"required" json:"token"`
-	Products  []CustomerCartJSON `binding:"required" json:"product"`
-	CreatedAt time.Time          `binding:"required" json:"created_at"`
-	UpdatedAt time.Time          `binding:"required" json:"updated_at"`
+	Status   int     `binding:"required" json:"status"`
+	Count    int     `binding:"required" json:"count"`
+	Total    float64 `binding:"required" json:"total"`
+	Customer string  `binding:"required" json:"customer"`
+	Token    string  `binding:"required" json:"token"`
 }
 
 func Migrate(database *sqlx.DB) {
@@ -70,7 +64,7 @@ func Migrate(database *sqlx.DB) {
 		token TEXT DEFAULT FALSE NOT NULL)
 	`)
 
-	if _, sqlException := database.Exec(`CREATE TABLE order_products(
+	if _, errors := database.Exec(`CREATE TABLE order_products(
 		order_id INTEGER NOT NULL
 			CONSTRAINT fk_order_products_order_id
 			REFERENCES orders(id) ON UPDATE CASCADE ON DELETE CASCADE,
@@ -79,16 +73,22 @@ func Migrate(database *sqlx.DB) {
 			REFERENCES products(barcode) ON UPDATE CASCADE ON DELETE CASCADE,
 		quantity INTEGER DEFAULT 1 NOT NULL,
 		CONSTRAINT order_products_pkey PRIMARY KEY (order_id, product_id))
-	`); sqlException != nil {
+	`); errors != nil {
 		return
 	}
 
-	insertOrder(database, "marques999", CustomerCartPOST{
+	insertOrder(database, &customers.Customer{
+		Username:   "marques999",
+		CreditCard: creditcard.CreditCard{Validity: time.Now().AddDate(5, 0, 0)},
+	}, CustomerCartPOST{
 		Quantity: 1,
 		Product:  "4713147489589",
 	})
 
-	insertOrder(database, "admin", CustomerCartPOST{
+	insertOrder(database, &customers.Customer{
+		Username:   "admin",
+		CreditCard: creditcard.CreditCard{Validity: time.Now().AddDate(5, 0, 0)},
+	}, CustomerCartPOST{
 		Quantity: 3,
 		Product:  "824142132142",
 	}, CustomerCartPOST{
@@ -96,7 +96,10 @@ func Migrate(database *sqlx.DB) {
 		Product:  "889349114872",
 	})
 
-	insertOrder(database, "jabst", CustomerCartPOST{
+	insertOrder(database, &customers.Customer{
+		Username:   "jabst",
+		CreditCard: creditcard.CreditCard{Validity: time.Now().AddDate(5, 0, 0)},
+	}, CustomerCartPOST{
 		Quantity: 1,
 		Product:  "884102029028",
 	}, CustomerCartPOST{
@@ -104,7 +107,10 @@ func Migrate(database *sqlx.DB) {
 		Product:  "889349114872",
 	})
 
-	insertOrder(database, "somouco", CustomerCartPOST{
+	insertOrder(database, &customers.Customer{
+		Username:   "somouco",
+		CreditCard: creditcard.CreditCard{Validity: time.Now().AddDate(5, 0, 0)},
+	}, CustomerCartPOST{
 		Quantity: 2,
 		Product:  "824142132142",
 	})

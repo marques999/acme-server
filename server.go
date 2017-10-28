@@ -1,43 +1,37 @@
 package main
 
 import (
-	"fmt"
 	"os"
+	"fmt"
 	"log"
 	"time"
 	_ "github.com/lib/pq"
+	"github.com/jmoiron/sqlx"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	"github.com/appleboy/gin-jwt"
-	"github.com/marques999/acme-server/auth"
 	"github.com/marques999/acme-server/common"
-	"github.com/marques999/acme-server/customers"
 	"github.com/marques999/acme-server/orders"
 	"github.com/marques999/acme-server/products"
-	"github.com/jmoiron/sqlx"
+	"github.com/marques999/acme-server/customers"
 	"github.com/marques999/acme-server/creditcard"
 )
 
 func main() {
 
+	gin.SetMode(gin.ReleaseMode)
 	envException := godotenv.Load()
 
 	if envException != nil {
 		log.Fatal(envException.Error())
 	}
 
-	psqlConnection := fmt.Sprintf("host=localhost user=%s dbname=%s sslmode=disable password=%s",
+	database := sqlx.MustConnect("postgres", fmt.Sprintf(
+		"host=localhost user=%s dbname=%s sslmode=disable password=%s",
 		getEnvOrDefault("POSTGRES_USER", "postgres"),
 		getEnvOrDefault("POSTGRES_DB", "postgres"),
 		getEnvOrDefault("POSTGRES_PASSWORD", "postgres"),
-	)
-
-	gin.SetMode(gin.ReleaseMode)
-	database, connectionException := sqlx.Connect("postgres", psqlConnection)
-
-	if connectionException != nil {
-		log.Fatal(connectionException.Error())
-	}
+	))
 
 	defer database.Close()
 	creditcard.Migrate(database)
@@ -45,26 +39,18 @@ func main() {
 	products.Migrate(database)
 	orders.Migrate(database)
 	router := gin.Default()
-	middleware := getAuthenticator(database)
-	auth.InitializeRoutes(database, middleware, router)
-	customers.InitializeRoutes(database, middleware, router)
-	products.InitializeRoutes(database, middleware, router)
-	orders.InitializeRoutes(database, middleware, router)
-	router.Run(getEnvOrDefault("ACME_HOSTNAME", ":3333"))
-}
 
-func getEnvOrDefault(variableKey string, defaultValue string) string {
+	router.Use(common.CorsMiddleware(common.CorsConfig{
+		Origins:         "*",
+		ExposedHeaders:  "",
+		Credentials:     true,
+		ValidateHeaders: false,
+		MaxAge:          50 * time.Second,
+		Methods:         "GET, PUT, POST, DELETE, OPTIONS",
+		RequestHeaders:  "Origin, Authorization, Content-Type",
+	}))
 
-	if lookupValue, exists := os.LookupEnv(variableKey); exists {
-		return lookupValue
-	} else {
-		return defaultValue
-	}
-}
-
-func getAuthenticator(database *sqlx.DB) *jwt.GinJWTMiddleware {
-
-	return &jwt.GinJWTMiddleware{
+	middleware := &jwt.GinJWTMiddleware{
 		Realm:      common.AuthenticationRealm,
 		Key:        []byte(common.RamenRecipe),
 		Timeout:    time.Hour,
@@ -73,10 +59,25 @@ func getAuthenticator(database *sqlx.DB) *jwt.GinJWTMiddleware {
 			context.JSON(statusCode, gin.H{"error": message})
 		},
 		Authenticator: func(username string, password string, context *gin.Context) (string, bool) {
-			return customers.Authenticate(database, username, password)
+			return customers.Login(database, username, password)
 		},
 		TokenLookup:   "header:Authorization",
 		TokenHeadName: "Bearer",
 		TimeFunc:      time.Now,
+	}
+
+	common.InitializeRoutes(database, middleware, router)
+	customers.InitializeRoutes(database, middleware, router)
+	products.InitializeRoutes(database, middleware, router)
+	orders.InitializeRoutes(database, middleware, router)
+	router.Run(getEnvOrDefault("ACME_HOSTNAME", ":3333"))
+}
+
+func getEnvOrDefault(variableKey string, defaultValue string) string {
+
+	if lookup, exists := os.LookupEnv(variableKey); exists {
+		return lookup
+	} else {
+		return defaultValue
 	}
 }

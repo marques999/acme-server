@@ -1,4 +1,4 @@
-package auth
+package common
 
 import (
 	"github.com/jmoiron/sqlx"
