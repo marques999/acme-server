@@ -77,41 +77,49 @@ func Migrate(database *sqlx.DB) {
 		return
 	}
 
-	insertOrder(database, &customers.Customer{
-		Username:   "marques999",
-		CreditCard: creditcard.CreditCard{Validity: time.Now().AddDate(5, 0, 0)},
-	}, CustomerCartPOST{
-		Quantity: 1,
-		Product:  "4713147489589",
-	})
+	creditCard := creditcard.CreditCard{
+		Validity: time.Now().AddDate(5, 0, 0),
+	}
 
 	insertOrder(database, &customers.Customer{
 		Username:   "admin",
-		CreditCard: creditcard.CreditCard{Validity: time.Now().AddDate(5, 0, 0)},
-	}, CustomerCartPOST{
-		Quantity: 3,
-		Product:  "824142132142",
-	}, CustomerCartPOST{
+		CreditCard: creditCard,
+	}, []CustomerCartPOST{{
 		Quantity: 1,
-		Product:  "889349114872",
+		Product:  "4713147489589",
+	}})
+
+	insertOrder(database, &customers.Customer{
+		Username:   "marques999",
+		CreditCard: creditCard,
+	}, []CustomerCartPOST{
+		{
+			Quantity: 3,
+			Product:  "824142132142",
+		}, {
+			Quantity: 1,
+			Product:  "889349114872",
+		},
 	})
 
 	insertOrder(database, &customers.Customer{
 		Username:   "jabst",
-		CreditCard: creditcard.CreditCard{Validity: time.Now().AddDate(5, 0, 0)},
-	}, CustomerCartPOST{
-		Quantity: 1,
-		Product:  "884102029028",
-	}, CustomerCartPOST{
-		Quantity: 1,
-		Product:  "889349114872",
+		CreditCard: creditCard,
+	}, []CustomerCartPOST{
+		{
+			Quantity: 1,
+			Product:  "884102029028",
+		}, {
+			Quantity: 1,
+			Product:  "889349114872",
+		},
 	})
 
 	insertOrder(database, &customers.Customer{
 		Username:   "somouco",
-		CreditCard: creditcard.CreditCard{Validity: time.Now().AddDate(5, 0, 0)},
-	}, CustomerCartPOST{
+		CreditCard: creditCard,
+	}, []CustomerCartPOST{{
 		Quantity: 2,
 		Product:  "824142132142",
-	})
+	}})
 }

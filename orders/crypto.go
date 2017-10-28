@@ -18,14 +18,14 @@ func encodeSha1(payload []byte) []byte {
 	return sha1Algorithm.Sum(nil)
 }
 
-func verifySignature(publicKey string, decoded string, checksum []byte) error {
+func verifySignature(publicKey string, signature string, payload []byte) error {
 
-	if decoded, errors := base64.StdEncoding.DecodeString(decoded); errors != nil {
+	if decoded, errors := base64.StdEncoding.DecodeString(signature); errors != nil {
 		return errors
 	} else if publicKey, errors := decodePublicKey(publicKey); errors != nil {
 		return errors
 	} else {
-		return rsa.VerifyPKCS1v15(publicKey, crypto.SHA1, checksum, decoded)
+		return rsa.VerifyPKCS1v15(publicKey, crypto.SHA1, encodeSha1(payload), decoded)
 	}
 }
 

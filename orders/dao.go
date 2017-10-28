@@ -1,8 +1,6 @@
 package orders
 
 import (
-	"time"
-	"math/rand"
 	"database/sql"
 	"github.com/jmoiron/sqlx"
 	"github.com/Masterminds/squirrel"
@@ -42,25 +40,11 @@ func listOrders(database *sqlx.DB, username string) ([]Order, error) {
 	}
 }
 
-func getOrder(database *sqlx.DB, condition squirrel.Eq) (*Order, error) {
+func getOrder(database *sqlx.DB, token string, customer string) (*Order, error) {
 
-	if query, args, errors := preloadGet.Where(condition).ToSql(); errors != nil {
-		return nil, errors
-	} else {
-		var order Order
-		return &order, database.Get(&order, query, args...)
-	}
-}
-
-var preloadDelete = common.SqlBuilder().Delete(Orders)
-var preloadUpdate = common.SqlBuilder().Update(Orders).Suffix(common.ReturningRow)
-var preloadManyDelete = common.SqlBuilder().Delete(OrderProducts)
-
-func updateOrder(database *sqlx.DB, condition squirrel.Eq, status int) (*Order, error) {
-
-	if query, args, errors := preloadUpdate.SetMap(map[string]interface{}{
-		Status: status,
-	}).Where(condition).ToSql(); errors != nil {
+	if query, args, errors := preloadGet.Where(getQueryOptions(
+		token, customer,
+	)).ToSql(); errors != nil {
 		return nil, errors
 	} else {
 		var order Order
@@ -75,49 +59,66 @@ var preloadInsert = common.SqlBuilder().Insert(Orders).Columns(
 func insertOrder(
 	database *sqlx.DB,
 	customer *customers.Customer,
-	customerCartPOST ...CustomerCartPOST,
+	customerCartPOST []CustomerCartPOST,
 ) (*map[string]interface{}, error) {
 
-	// inserir encomenda sem token nem total
+	order := Order{}
 
-	order := Order{Status: ValidationFailed}
-	query, args, errors := preloadInsert.Values(customer, ValidationFailed).ToSql()
-
-	if errors != nil {
-		return nil, errors
-	}
-
-	// obtém encomenda recentemente inserida
-
-	if errors = database.Get(&order, query, args...); errors != nil {
-		return nil, errors
-	}
-
-	// inserir as entidades da associação muitos-para-muitos
-
-	customerCart, errors := insertOrderProducts(database, order.ID, customerCartPOST)
-
-	if errors != nil {
-		return nil, errors
-	}
-
-	if customer.CreditCard.Validity.After(time.Now()) && rand.Float64() <= common.SuccessProbability {
-		order.Status = ValidationComplete
-	}
-
-	// atualizar encomenda com total a pagar e token gerado aleatoriamente
-
-	if token, errors := order.generateToken(); errors != nil {
-		return nil, errors
-	} else if query, args, errors = preloadUpdate.SetMap(map[string]interface{}{
-		Token:  token,
-		Status: order.Status,
-	}).Where(squirrel.Eq{common.Id: order.ID}).ToSql(); errors != nil {
+	if query, args, errors := preloadInsert.Values(
+		customer, generateStatus(customer.CreditCard),
+	).ToSql(); errors != nil {
 		return nil, errors
 	} else if errors = database.Get(&order, query, args...); errors != nil {
 		return nil, errors
+	} else if customerCart, errors := insertProducts(database, order.ID, customerCartPOST); errors != nil {
+		return nil, errors
+	} else if token, errors := order.generateToken(); errors != nil {
+		return nil, errors
+	} else if updated, errors := updateOrder(database, token, customer.Username, map[string]interface{}{
+		Token: token,
+	}); errors != nil {
+		return nil, errors
 	} else {
-		return order.generateJson(customerCart), nil
+		return updated.generateJson(customerCart), nil
+	}
+}
+
+var preloadUpdate = common.SqlBuilder().Update(Orders).Suffix(common.ReturningRow)
+
+func updateOrder(
+	database *sqlx.DB,
+	token string,
+	customer string,
+	what map[string]interface{},
+) (*Order, error) {
+
+	if query, args, errors := preloadUpdate.SetMap(what).Where(
+		getQueryOptions(token, customer),
+	).ToSql(); errors != nil {
+		return nil, errors
+	} else {
+		var order Order
+		return &order, database.Get(&order, query, args...)
+	}
+}
+
+var preloadManyDelete = common.SqlBuilder().Delete(OrderProducts)
+var preloadDelete = common.SqlBuilder().Delete(Orders).Suffix(common.ReturningRow)
+
+func deleteOrder(database *sqlx.DB, token string, customer string) (sql.Result, error) {
+
+	var order Order
+
+	if query, args, errors := preloadDelete.Where(
+		getQueryOptions(token, customer),
+	).ToSql(); errors != nil {
+		return nil, errors
+	} else if errors := database.Get(&order, query, args...); errors != nil {
+		return nil, errors
+	} else {
+		return preloadManyDelete.Where(squirrel.Eq{
+			OrderID: order.ID,
+		}).RunWith(database.DB).Exec()
 	}
 }
 
@@ -127,7 +128,7 @@ var preloadManyGet = common.SqlBuilder().Select(
 	"products ON products.barcode = order_products.product_id",
 )
 
-func getCustomerCart(database *sqlx.DB, orderId int) ([]CustomerCartJSON, error) {
+func getProducts(database *sqlx.DB, orderId int) ([]CustomerCartJSON, error) {
 
 	if query, args, errors := preloadManyGet.Where(
 		squirrel.Eq{OrderID: orderId},
@@ -144,7 +145,7 @@ var preloadManyInsert = common.SqlBuilder().Insert(OrderProducts).Columns(
 	OrderID, ProductID, Quantity,
 )
 
-func insertOrderProducts(database *sqlx.DB, orderId int, customerCartPOST []CustomerCartPOST) ([]CustomerCartJSON, error) {
+func insertProducts(database *sqlx.DB, orderId int, customerCartPOST []CustomerCartPOST) ([]CustomerCartJSON, error) {
 
 	barcodes := make([]string, len(customerCartPOST))
 
@@ -177,12 +178,4 @@ func insertOrderProducts(database *sqlx.DB, orderId int, customerCartPOST []Cust
 	} else {
 		return customerCart, nil
 	}
-}
-
-func deleteOrder(database *sqlx.DB, condition squirrel.Eq) (sql.Result, error) {
-	return preloadDelete.Where(condition).RunWith(database.DB).Exec()
-}
-
-func deleteOrderProducts(database *sqlx.DB, orderId int) (sql.Result, error) {
-	return preloadManyDelete.Where(squirrel.Eq{OrderID: orderId}).RunWith(database.DB).Exec()
 }

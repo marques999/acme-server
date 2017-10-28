@@ -1,10 +1,13 @@
 package orders
 
 import (
+	"time"
+	"math/rand"
 	"github.com/jmoiron/sqlx"
 	"github.com/speps/go-hashids"
 	"github.com/Masterminds/squirrel"
 	"github.com/marques999/acme-server/common"
+	"github.com/marques999/acme-server/creditcard"
 	"github.com/marques999/acme-server/products"
 )
 
@@ -36,19 +39,6 @@ func (order *Order) generateToken() (string, error) {
 	})
 }
 
-func (order *Order) generateList() *map[string]interface{} {
-
-	return &map[string]interface{}{
-		Status:           order.Status,
-		Count:            order.Count,
-		Total:            order.Total,
-		Customer:         order.Customer,
-		Token:            order.Token,
-		common.CreatedAt: order.CreatedAt,
-		common.UpdatedAt: order.UpdatedAt,
-	}
-}
-
 func (order *Order) generateJson(customerCart []CustomerCartJSON) *map[string]interface{} {
 
 	return &map[string]interface{}{
@@ -62,17 +52,12 @@ func (order *Order) generateJson(customerCart []CustomerCartJSON) *map[string]in
 	}
 }
 
-func generateProductOrder(query *sqlx.Rows) CustomerCartJSON {
+func generateStatus(creditCard creditcard.CreditCard) int {
 
-	var quantity int
-	var product products.Product
-
-	query.Scan(&quantity)
-	query.StructScan(&product)
-
-	return CustomerCartJSON{
-		Quantity: quantity,
-		Product:  product.GenerateJson(),
+	if creditCard.Validity.After(time.Now()) && rand.Float64() <= common.SuccessProbability {
+		return ValidationComplete
+	} else {
+		return ValidationFailed
 	}
 }
 
@@ -81,7 +66,17 @@ func generateCustomerCart(query *sqlx.Rows) []CustomerCartJSON {
 	orderProducts := []CustomerCartJSON{}
 
 	for query.Next() {
-		orderProducts = append(orderProducts, generateProductOrder(query))
+
+		var quantity int
+		var product products.Product
+
+		query.Scan(&quantity)
+		query.StructScan(&product)
+
+		orderProducts = append(orderProducts, CustomerCartJSON{
+			Quantity: quantity,
+			Product:  product.GenerateJson(),
+		})
 	}
 
 	return orderProducts
