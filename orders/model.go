@@ -5,7 +5,6 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/marques999/acme-server/common"
 	"github.com/marques999/acme-server/customers"
-	"github.com/marques999/acme-server/creditcard"
 	"github.com/marques999/acme-server/products"
 )
 
@@ -21,9 +20,9 @@ const (
 	Customer           = "customer"
 	Products           = "products"
 	OrderProducts      = "order_products"
-	OrderID            = "order_products.order_id"
-	ProductID          = "order_products.product_id"
-	Quantity           = "order_products.quantity"
+	OrderID            = "order_id"
+	ProductID          = "product_id"
+	Quantity           = "quantity"
 )
 
 type OrderPOST struct {
@@ -59,7 +58,6 @@ func Migrate(database *sqlx.DB) {
 		customer TEXT NOT NULL
 			CONSTRAINT fk_orders_customer
 			REFERENCES customers(username) ON UPDATE CASCADE ON DELETE CASCADE,
-		total NUMERIC DEFAULT 0 NOT NULL,
 		status INTEGER DEFAULT 0 NOT NULL,
 		token TEXT DEFAULT FALSE NOT NULL)
 	`)
@@ -68,58 +66,46 @@ func Migrate(database *sqlx.DB) {
 		order_id INTEGER NOT NULL
 			CONSTRAINT fk_order_products_order_id
 			REFERENCES orders(id) ON UPDATE CASCADE ON DELETE CASCADE,
-		product_id TEXT NOT NULL
+		product_id INTEGER NOT NULL
 			CONSTRAINT fk_order_products_product_id
-			REFERENCES products(barcode) ON UPDATE CASCADE ON DELETE CASCADE,
+			REFERENCES products(id) ON UPDATE CASCADE ON DELETE CASCADE,
 		quantity INTEGER DEFAULT 1 NOT NULL,
 		CONSTRAINT order_products_pkey PRIMARY KEY (order_id, product_id))
 	`); errors != nil {
 		return
 	}
 
-	creditCard := creditcard.CreditCard{
+	creditCard := customers.CreditCard{
 		Validity: time.Now().AddDate(5, 0, 0),
 	}
 
 	insertOrder(database, &customers.Customer{
 		Username:   "admin",
 		CreditCard: creditCard,
-	}, []CustomerCartPOST{{
-		Quantity: 1,
-		Product:  "4713147489589",
-	}})
+	}, []CustomerCartPOST{
+		{1, "4713147489589"},
+	})
 
 	insertOrder(database, &customers.Customer{
 		Username:   "marques999",
 		CreditCard: creditCard,
 	}, []CustomerCartPOST{
-		{
-			Quantity: 3,
-			Product:  "824142132142",
-		}, {
-			Quantity: 1,
-			Product:  "889349114872",
-		},
+		{3, "824142132142"},
+		{1, "889349114872"},
 	})
 
 	insertOrder(database, &customers.Customer{
 		Username:   "jabst",
 		CreditCard: creditCard,
 	}, []CustomerCartPOST{
-		{
-			Quantity: 1,
-			Product:  "884102029028",
-		}, {
-			Quantity: 1,
-			Product:  "889349114872",
-		},
+		{1, "884102029028"},
+		{1, "889349114872"},
 	})
 
 	insertOrder(database, &customers.Customer{
 		Username:   "somouco",
 		CreditCard: creditCard,
-	}, []CustomerCartPOST{{
-		Quantity: 2,
-		Product:  "824142132142",
-	}})
+	}, []CustomerCartPOST{
+		{2, "824142132142"},
+	})
 }

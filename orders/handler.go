@@ -20,7 +20,7 @@ func List(database *sqlx.DB, username string) (int, interface{}) {
 
 func Find(context *gin.Context, database *sqlx.DB, customer string) (int, interface{}) {
 
-	if token, exists := context.Params.Get("id"); exists == false {
+	if token, exists := context.Params.Get(common.Id); exists == false {
 		return common.MissingParameter()
 	} else if order, errors := getOrder(database, token, customer); errors != nil {
 		return http.StatusNotFound, common.JSON(errors)
@@ -41,8 +41,8 @@ func Insert(context *gin.Context, database *sqlx.DB, username string) (int, inte
 		return http.StatusBadRequest, common.JSON(errors)
 	} else if customer, errors := customers.GetCustomer(database, username); errors != nil {
 		return http.StatusUnauthorized, common.JSON(errors)
-	} else if errors = verifySignature(customer.PublicKey, orderPOST.Signature, jsonProducts); errors != nil {
-		return http.StatusUnauthorized, errors
+	} else if errors = VerifySignature(customer.PublicKey, orderPOST.Signature, jsonProducts); errors != nil {
+		return http.StatusUnauthorized, common.JSON(errors)
 	} else if order, errors := insertOrder(database, customer, orderPOST.Products); errors != nil {
 		return http.StatusInternalServerError, common.JSON(errors)
 	} else {
@@ -52,7 +52,7 @@ func Insert(context *gin.Context, database *sqlx.DB, username string) (int, inte
 
 func Purchase(context *gin.Context, database *sqlx.DB, customer string) (int, interface{}) {
 
-	if token, exists := context.Params.Get("id"); exists == false {
+	if token, exists := context.Params.Get(common.Id); exists == false {
 		return common.MissingParameter()
 	} else if order, errors := updateOrder(database, token, customer, map[string]interface{}{
 		Status: Purchased,
@@ -67,7 +67,7 @@ func Purchase(context *gin.Context, database *sqlx.DB, customer string) (int, in
 
 func Delete(context *gin.Context, database *sqlx.DB, customer string) (int, interface{}) {
 
-	if token, exists := context.Params.Get("id"); exists == false {
+	if token, exists := context.Params.Get(common.Id); exists == false {
 		return common.MissingParameter()
 	} else if _, errors := deleteOrder(database, token, customer); errors != nil {
 		return http.StatusUnauthorized, common.JSON(errors)

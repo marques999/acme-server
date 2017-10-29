@@ -4,21 +4,38 @@ import (
 	"time"
 	"github.com/jmoiron/sqlx"
 	"github.com/marques999/acme-server/common"
-	"github.com/marques999/acme-server/creditcard"
 )
 
 const (
-	Customers  = "customers"
-	Name       = "name"
-	Country    = "country"
-	Username   = "username"
-	Password   = "password"
-	Address1   = "address1"
-	Address2   = "address2"
-	PublicKey  = "public_key"
-	TaxNumber  = "tax_number"
-	CreditCard = "credit_card_id"
+	Type           = "type"
+	Number         = "number"
+	Validity       = "validity"
+	Customers      = "customers"
+	Name           = "name"
+	Country        = "country"
+	Username       = "username"
+	Password       = "password"
+	Address1       = "address1"
+	Address2       = "address2"
+	PublicKey      = "public_key"
+	TaxNumber      = "tax_number"
+	CreditCards    = "credit_cards"
+	CreditCardData = "credit_card"
+	CreditCardID   = "credit_card_id"
 )
+
+type CreditCard struct {
+	ID       int
+	Type     string
+	Number   string
+	Validity time.Time
+}
+
+type CreditCardJSON struct {
+	Type     string    `binding:"required" json:"type"`
+	Number   string    `binding:"required" json:"number"`
+	Validity time.Time `binding:"required" json:"validity"`
+}
 
 type Customer struct {
 	common.Model
@@ -31,7 +48,7 @@ type Customer struct {
 	PublicKey    string `db:"public_key"`
 	TaxNumber    string `db:"tax_number"`
 	CreditCardID int    `db:"credit_card_id"`
-	CreditCard   creditcard.CreditCard
+	CreditCard   CreditCard
 }
 
 type CustomerList struct {
@@ -46,18 +63,46 @@ type CustomerList struct {
 }
 
 type CustomerPOST struct {
-	Name       string                    `binding:"required" json:"name"`
-	Country    string                    `binding:"required" json:"country"`
-	Username   string                    `binding:"required" json:"username"`
-	Password   string                    `binding:"required" json:"password"`
-	Address1   string                    `binding:"required" json:"address1"`
-	Address2   string                    `binding:"required" json:"address2"`
-	PublicKey  string                    `binding:"required" json:"public_key"`
-	TaxNumber  string                    `binding:"required" json:"tax_number"`
-	CreditCard creditcard.CreditCardJSON `binding:"required" json:"credit_card"`
+	Name       string         `binding:"required" json:"name"`
+	Country    string         `binding:"required" json:"country"`
+	Username   string         `binding:"required" json:"username"`
+	Password   string         `binding:"required" json:"password"`
+	Address1   string         `binding:"required" json:"address1"`
+	Address2   string         `binding:"required" json:"address2"`
+	PublicKey  string         `binding:"required" json:"public_key"`
+	TaxNumber  string         `binding:"required" json:"tax_number"`
+	CreditCard CreditCardJSON `binding:"required" json:"credit_card"`
 }
 
 func Migrate(database *sqlx.DB) {
+
+	if _, errors := database.Exec(`CREATE TABLE credit_cards(
+		id serial NOT NULL CONSTRAINT credit_cards_pkey PRIMARY KEY,
+		type TEXT NOT NULL,
+		number TEXT NOT NULL,
+		validity timestamp WITH time zone DEFAULT CURRENT_TIMESTAMP NOT NULL)
+	`); errors == nil {
+
+		insertCreditCard(database, &CreditCardJSON{
+			"VISA", "123456789",
+			time.Now().AddDate(5, 0, 0),
+		})
+
+		insertCreditCard(database, &CreditCardJSON{
+			"Maestro", "310867542",
+			time.Now().AddDate(3, 6, 0),
+		})
+
+		insertCreditCard(database, &CreditCardJSON{
+			"Mastercard", "360420999",
+			time.Now().AddDate(1, 3, 13),
+		})
+
+		insertCreditCard(database, &CreditCardJSON{
+			"VISA Electron", "863101278",
+			time.Now().AddDate(2, 5, 5),
+		})
+	}
 
 	if _, errors := database.Exec(`CREATE TABLE customers(
 		id serial NOT NULL CONSTRAINT customers_pkey PRIMARY KEY,

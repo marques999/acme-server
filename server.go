@@ -14,16 +14,14 @@ import (
 	"github.com/marques999/acme-server/orders"
 	"github.com/marques999/acme-server/products"
 	"github.com/marques999/acme-server/customers"
-	"github.com/marques999/acme-server/creditcard"
 )
 
 func main() {
 
 	gin.SetMode(gin.ReleaseMode)
-	envException := godotenv.Load()
 
-	if envException != nil {
-		log.Fatal(envException.Error())
+	if errors := godotenv.Load(); errors != nil {
+		log.Fatal(errors.Error())
 	}
 
 	database := sqlx.MustConnect("postgres", fmt.Sprintf(
@@ -34,7 +32,6 @@ func main() {
 	))
 
 	defer database.Close()
-	creditcard.Migrate(database)
 	customers.Migrate(database)
 	products.Migrate(database)
 	orders.Migrate(database)

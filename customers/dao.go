@@ -40,7 +40,7 @@ func GetCustomer(database *sqlx.DB, username string) (*Customer, error) {
 
 var preloadInsert = common.SqlBuilder().Insert(Customers).Columns(
 	Name, Country, Username, Password, Address1,
-	Address2, PublicKey, TaxNumber, CreditCard,
+	Address2, PublicKey, TaxNumber, CreditCardID,
 ).Suffix(common.ReturningRow)
 
 func insertCustomer(database *sqlx.DB, customerPOST CustomerPOST, creditCardId int) (*Customer, error) {
@@ -65,7 +65,7 @@ func insertCustomer(database *sqlx.DB, customerPOST CustomerPOST, creditCardId i
 	}
 }
 
-var preloadDelete = common.SqlBuilder().Delete(Customers)
+var preloadDelete = common.SqlBuilder().Delete(Customers).Suffix(common.ReturningRow)
 var preloadUpdate = common.SqlBuilder().Update(Customers).Suffix(common.ReturningRow)
 var preloadLogin = common.SqlBuilder().Select(Password).From(Customers).Limit(1)
 
@@ -99,6 +99,67 @@ func validateLogin(database *sqlx.DB, username string) (*string, error) {
 	}
 }
 
-func deleteCustomer(database *sqlx.DB, username string) (sql.Result, error) {
-	return preloadDelete.Where(squirrel.Eq{Username: username}).RunWith(database.DB).Exec()
+func deleteCustomer(database *sqlx.DB, username string) (*Customer, error) {
+
+	if query, args, errors := preloadDelete.Where(
+		squirrel.Eq{Username: username},
+	).ToSql(); errors != nil {
+		return nil, errors
+	} else {
+		var customer Customer
+		return &customer, database.Get(&customer, query, args...)
+	}
+}
+
+var preloadCardGet = common.SqlBuilder().Select("*").From(CreditCards).Limit(1)
+
+func GetById(database *sqlx.DB, creditCardId int) (*CreditCard, error) {
+
+	if query, args, errors := preloadCardGet.Where(
+		squirrel.Eq{common.Id: creditCardId},
+	).ToSql(); errors != nil {
+		return nil, errors
+	} else {
+		var creditCard CreditCard
+		return &creditCard, database.Get(&creditCard, query, args...)
+	}
+}
+
+var preloadCardInsert = common.SqlBuilder().Insert(CreditCards).Columns(
+	Type, Number, Validity,
+).Suffix(common.ReturningRow)
+
+func insertCreditCard(database *sqlx.DB, creditCardJSON *CreditCardJSON) (*CreditCard, error) {
+
+	if query, args, errors := preloadCardInsert.Values(
+		creditCardJSON.Type,
+		creditCardJSON.Number,
+		creditCardJSON.Validity,
+	).ToSql(); errors != nil {
+		return nil, errors
+	} else {
+		var creditCard CreditCard
+		return &creditCard, database.Get(&creditCard, query, args...)
+	}
+}
+
+var preloadCardDelete = common.SqlBuilder().Delete(CreditCards)
+var preloadCardUpdate = common.SqlBuilder().Update(CreditCards).Suffix(common.ReturningRow)
+
+func updateCreditCard(database *sqlx.DB, creditCardId int, creditCardJSON *CreditCardJSON) (*CreditCard, error) {
+
+	if query, args, errors := preloadCardUpdate.SetMap(map[string]interface{}{
+		Type:     creditCardJSON.Type,
+		Number:   creditCardJSON.Number,
+		Validity: creditCardJSON.Validity,
+	}).Where(squirrel.Eq{common.Id: creditCardId}).ToSql(); errors != nil {
+		return nil, errors
+	} else {
+		var creditCard CreditCard
+		return &creditCard, database.Get(&creditCard, query, args...)
+	}
+}
+
+func deleteCreditCard(database *sqlx.DB, creditCardID int) (sql.Result, error) {
+	return preloadCardDelete.Where(squirrel.Eq{common.Id: creditCardID}).RunWith(database.DB).Exec()
 }

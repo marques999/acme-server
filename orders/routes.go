@@ -9,7 +9,7 @@ import (
 
 func InitializeRoutes(database *sqlx.DB, middleware *jwt.GinJWTMiddleware, router *gin.Engine) {
 
-	routes := router.Group("/orders")
+	routes := router.Group("/" + Orders)
 	{
 		routes.Use(middleware.MiddlewareFunc())
 		{

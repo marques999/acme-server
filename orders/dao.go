@@ -21,7 +21,7 @@ var preloadGet = common.SqlBuilder().Select(
 ).From(Orders).Join(
 	"order_products ON orders.id = order_products.order_id",
 ).Join(
-	"products ON products.barcode = order_products.product_id",
+	"products ON products.id = order_products.product_id",
 ).GroupBy("orders.id")
 
 func listOrders(database *sqlx.DB, username string) ([]Order, error) {
@@ -65,7 +65,7 @@ func insertOrder(
 	order := Order{}
 
 	if query, args, errors := preloadInsert.Values(
-		customer, generateStatus(customer.CreditCard),
+		customer.Username, generateStatus(customer.CreditCard),
 	).ToSql(); errors != nil {
 		return nil, errors
 	} else if errors = database.Get(&order, query, args...); errors != nil {
@@ -74,15 +74,19 @@ func insertOrder(
 		return nil, errors
 	} else if token, errors := order.generateToken(); errors != nil {
 		return nil, errors
-	} else if updated, errors := updateOrder(database, token, customer.Username, map[string]interface{}{
-		Token: token,
-	}); errors != nil {
+	} else if query, args, errors := preloadUpdate.Set(Token, token).Where(
+		squirrel.Eq{common.Id: order.ID},
+	).ToSql(); errors != nil {
+		return nil, errors
+	} else if errors := database.Get(&order, query, args...); errors != nil {
 		return nil, errors
 	} else {
-		return updated.generateJson(customerCart), nil
+		return order.generateJson(customerCart), nil
 	}
 }
 
+var preloadManyDelete = common.SqlBuilder().Delete(OrderProducts)
+var preloadDelete = common.SqlBuilder().Delete(Orders).Suffix(common.ReturningRow)
 var preloadUpdate = common.SqlBuilder().Update(Orders).Suffix(common.ReturningRow)
 
 func updateOrder(
@@ -101,9 +105,6 @@ func updateOrder(
 		return &order, database.Get(&order, query, args...)
 	}
 }
-
-var preloadManyDelete = common.SqlBuilder().Delete(OrderProducts)
-var preloadDelete = common.SqlBuilder().Delete(Orders).Suffix(common.ReturningRow)
 
 func deleteOrder(database *sqlx.DB, token string, customer string) (sql.Result, error) {
 
@@ -125,7 +126,7 @@ func deleteOrder(database *sqlx.DB, token string, customer string) (sql.Result, 
 var preloadManyGet = common.SqlBuilder().Select(
 	Quantity, "products.*",
 ).From(OrderProducts).Join(
-	"products ON products.barcode = order_products.product_id",
+	"products ON products.id = order_products.product_id",
 )
 
 func getProducts(database *sqlx.DB, orderId int) ([]CustomerCartJSON, error) {
@@ -134,10 +135,10 @@ func getProducts(database *sqlx.DB, orderId int) ([]CustomerCartJSON, error) {
 		squirrel.Eq{OrderID: orderId},
 	).ToSql(); errors != nil {
 		return []CustomerCartJSON{}, errors
-	} else if query, errors := database.Queryx(query, args); errors != nil {
+	} else if items, errors := database.Queryx(query, args...); errors != nil {
 		return []CustomerCartJSON{}, errors
 	} else {
-		return generateCustomerCart(query), nil
+		return generateCustomerCart(items), nil
 	}
 }
 
@@ -154,7 +155,7 @@ func insertProducts(database *sqlx.DB, orderId int, customerCartPOST []CustomerC
 	}
 
 	customerCart := make([]CustomerCartJSON, len(customerCartPOST))
-	products, errors := products.GetProductsByBarcode(database, barcodes)
+	purchased, errors := products.GetProductsByBarcode(database, barcodes)
 
 	if errors != nil {
 		return customerCart, errors
@@ -162,7 +163,7 @@ func insertProducts(database *sqlx.DB, orderId int, customerCartPOST []CustomerC
 
 	builder := preloadManyInsert
 
-	for index, product := range products {
+	for index, product := range purchased {
 
 		quantity := customerCartPOST[index].Quantity
 		builder = builder.Values(orderId, product.ID, quantity)

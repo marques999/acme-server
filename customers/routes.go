@@ -9,7 +9,7 @@ import (
 
 func InitializeRoutes(database *sqlx.DB, middleware *jwt.GinJWTMiddleware, router *gin.Engine) {
 
-	routes := router.Group("/customers")
+	routes := router.Group("/" + Customers)
 	{
 		routes.POST(common.RouteDefault, func(context *gin.Context) {
 			context.JSON(Post(context, database))

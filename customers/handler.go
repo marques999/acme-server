@@ -6,7 +6,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
 	"github.com/marques999/acme-server/common"
-	"github.com/marques999/acme-server/creditcard"
 )
 
 func Login(database *sqlx.DB, username string, original string) (string, bool) {
@@ -31,14 +30,14 @@ func List(database *sqlx.DB, username string) (int, interface{}) {
 
 func Find(context *gin.Context, database *sqlx.DB, username string) (int, interface{}) {
 
-	if id, exists := context.Params.Get("id"); exists == false {
+	if id, exists := context.Params.Get(common.Id); exists == false {
 		return common.MissingParameter()
 	} else if common.HasPermissions(username, id) == false {
 		return common.PermisssionDenied()
 	} else if customer, errors := GetCustomer(database, id); errors != nil {
 		return http.StatusInternalServerError, common.JSON(errors)
 	} else {
-		return http.StatusOK, customer
+		return http.StatusOK, customer.generateDetails(&customer.CreditCard)
 	}
 }
 
@@ -50,7 +49,7 @@ func Post(context *gin.Context, database *sqlx.DB) (int, interface{}) {
 		return http.StatusBadRequest, common.JSON(errors)
 	} else if customerPOST.Username == common.AdminAccount {
 		return common.PermisssionDenied()
-	} else if creditCard, errors := creditcard.Insert(database, &customerPOST.CreditCard); errors != nil {
+	} else if creditCard, errors := insertCreditCard(database, &customerPOST.CreditCard); errors != nil {
 		return http.StatusInternalServerError, common.JSON(errors)
 	} else if customer, errors := insertCustomer(database, customerPOST, creditCard.ID); errors != nil {
 		return http.StatusInternalServerError, common.JSON(errors)
@@ -63,7 +62,7 @@ func Put(context *gin.Context, database *sqlx.DB, username string) (int, interfa
 
 	customerPOST := CustomerPOST{}
 
-	if id, exists := context.Params.Get("id"); exists == false {
+	if id, exists := context.Params.Get(common.Id); exists == false {
 		return common.MissingParameter()
 	} else if common.HasPermissions(username, id) == false {
 		return common.PermisssionDenied()
@@ -71,7 +70,9 @@ func Put(context *gin.Context, database *sqlx.DB, username string) (int, interfa
 		return http.StatusBadRequest, common.JSON(errors)
 	} else if customer, errors := updateCustomer(database, id, &customerPOST); errors != nil {
 		return http.StatusInternalServerError, common.JSON(errors)
-	} else if creditCard, errors := creditcard.GetById(database, customer.CreditCardID); errors != nil {
+	} else if creditCard, errors := updateCreditCard(
+		database, customer.CreditCardID, &customerPOST.CreditCard,
+	); errors != nil {
 		return http.StatusInternalServerError, common.JSON(errors)
 	} else {
 		return http.StatusOK, customer.generateDetails(creditCard)
@@ -80,11 +81,13 @@ func Put(context *gin.Context, database *sqlx.DB, username string) (int, interfa
 
 func Delete(context *gin.Context, database *sqlx.DB, username string) (int, interface{}) {
 
-	if id, exists := context.Params.Get("id"); exists == false {
+	if id, exists := context.Params.Get(common.Id); exists == false {
 		return common.MissingParameter()
 	} else if common.HasPermissions(username, id) == false {
 		return common.PermisssionDenied()
-	} else if _, errors := deleteCustomer(database, id); errors != nil {
+	} else if customer, errors := deleteCustomer(database, id); errors != nil {
+		return http.StatusInternalServerError, common.JSON(errors)
+	} else if _, errors := deleteCreditCard(database, customer.CreditCardID); errors != nil {
 		return http.StatusInternalServerError, common.JSON(errors)
 	} else {
 		return http.StatusNoContent, nil

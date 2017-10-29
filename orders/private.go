@@ -7,8 +7,8 @@ import (
 	"github.com/speps/go-hashids"
 	"github.com/Masterminds/squirrel"
 	"github.com/marques999/acme-server/common"
-	"github.com/marques999/acme-server/creditcard"
 	"github.com/marques999/acme-server/products"
+	"github.com/marques999/acme-server/customers"
 )
 
 func getQueryOptions(orderId string, customer string) squirrel.Eq {
@@ -52,7 +52,7 @@ func (order *Order) generateJson(customerCart []CustomerCartJSON) *map[string]in
 	}
 }
 
-func generateStatus(creditCard creditcard.CreditCard) int {
+func generateStatus(creditCard customers.CreditCard) int {
 
 	if creditCard.Validity.After(time.Now()) && rand.Float64() <= common.SuccessProbability {
 		return ValidationComplete
@@ -70,12 +70,13 @@ func generateCustomerCart(query *sqlx.Rows) []CustomerCartJSON {
 		var quantity int
 		var product products.Product
 
-		query.Scan(&quantity)
-		query.StructScan(&product)
+		query.Scan(&quantity, &product.ID, &product.Name,
+			&product.Brand, &product.Price, &product.Barcode,
+			&product.ImageUri, &product.Description,
+			&product.CreatedAt, &product.UpdatedAt)
 
 		orderProducts = append(orderProducts, CustomerCartJSON{
-			Quantity: quantity,
-			Product:  product.GenerateJson(),
+			quantity, product.GenerateJson(),
 		})
 	}
 

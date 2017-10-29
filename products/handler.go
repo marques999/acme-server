@@ -46,7 +46,7 @@ func Update(context *gin.Context, database *sqlx.DB, username string) (int, inte
 
 	productJson := ProductJSON{}
 
-	if barcode, exists := context.Params.Get("id"); exists == false {
+	if barcode, exists := context.Params.Get(common.Id); exists == false {
 		return common.MissingParameter()
 	} else if errors := context.Bind(&productJson); errors != nil {
 		return http.StatusBadRequest, common.JSON(errors)
@@ -61,7 +61,7 @@ func Update(context *gin.Context, database *sqlx.DB, username string) (int, inte
 
 func Delete(context *gin.Context, database *sqlx.DB, username string) (int, interface{}) {
 
-	if barcode, exists := context.Params.Get("id"); exists == false {
+	if barcode, exists := context.Params.Get(common.Id); exists == false {
 		return common.MissingParameter()
 	} else if username != common.AdminAccount {
 		return common.PermisssionDenied()

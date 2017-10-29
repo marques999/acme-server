@@ -36,7 +36,7 @@ func PermisssionDenied() (int, interface{}) {
 }
 
 func HasPermissions(username string, customerId string) bool {
-	return username == AdminAccount || username != customerId
+	return username == AdminAccount || username == customerId
 }
 
 func ParseId(context *gin.Context) string {
