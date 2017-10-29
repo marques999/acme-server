@@ -17,12 +17,12 @@ const (
 
 type Product struct {
 	common.Model
-	Name        string
-	Brand       string
-	Price       float64
-	Barcode     string
-	ImageUri    string `db:"image_uri"`
-	Description string
+	Name        string  `binding:"required" json:"name"`
+	Brand       string  `binding:"required" json:"brand"`
+	Price       float64 `binding:"required" json:"price"`
+	Barcode     string  `binding:"required" json:"barcode"`
+	ImageUri    string  `binding:"required" json:"image_uri" db:"image_uri"`
+	Description string  `binding:"required" json:"description"`
 }
 
 type ProductJSON struct {

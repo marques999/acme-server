@@ -7,32 +7,27 @@ import (
 	"github.com/marques999/acme-server/common"
 )
 
-var preloadList = common.SqlBuilder().Select(
-	Name, Brand, Price, Barcode, ImageUri, Description,
-).From(Products)
+var preloadList = common.SqlBuilder().Select("*").From(Products)
+var preloadGet = common.SqlBuilder().Select("*").From(Products).Limit(1)
 
-func getProducts(database *sqlx.DB) ([]ProductJSON, error) {
+func getProducts(database *sqlx.DB) ([]Product, error) {
 
 	if query, args, errors := preloadList.ToSql(); errors != nil {
-		return []ProductJSON{}, errors
+		return []Product{}, errors
 	} else {
-		var products []ProductJSON
+		var products []Product
 		return products, database.Select(&products, query, args...)
 	}
 }
 
-var preloadGet = common.SqlBuilder().Select(
-	Name, Brand, Price, Barcode, ImageUri, Description,
-).From(Products).Limit(1)
-
-func getProduct(database *sqlx.DB, barcode string) (*ProductJSON, error) {
+func getProduct(database *sqlx.DB, barcode string) (*Product, error) {
 
 	if query, args, errors := preloadGet.Where(
 		squirrel.Eq{Barcode: barcode},
 	).ToSql(); errors != nil {
 		return nil, errors
 	} else {
-		var product ProductJSON
+		var product Product
 		return &product, database.Get(&product, query, args...)
 	}
 }
