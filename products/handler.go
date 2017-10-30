@@ -29,12 +29,12 @@ func Find(context *gin.Context, database *sqlx.DB) (int, interface{}) {
 
 func Insert(context *gin.Context, database *sqlx.DB, username string) (int, interface{}) {
 
-	productJson := ProductJSON{}
+	productJson := ProductInsert{}
 
-	if errors := context.Bind(&productJson); errors != nil {
-		return http.StatusBadRequest, common.JSON(errors)
-	} else if username != common.AdminAccount {
+	if username != common.AdminAccount {
 		return common.PermisssionDenied()
+	} else if errors := context.Bind(&productJson); errors != nil {
+		return http.StatusBadRequest, common.JSON(errors)
 	} else if product, errors := insertProduct(database, productJson); errors != nil {
 		return http.StatusInternalServerError, common.JSON(errors)
 	} else {
@@ -44,14 +44,14 @@ func Insert(context *gin.Context, database *sqlx.DB, username string) (int, inte
 
 func Update(context *gin.Context, database *sqlx.DB, username string) (int, interface{}) {
 
-	productJson := ProductJSON{}
+	productJson := ProductUpdate{}
 
-	if barcode, exists := context.Params.Get(common.Id); exists == false {
+	if username != common.AdminAccount {
+		return common.PermisssionDenied()
+	} else if barcode, exists := context.Params.Get(common.Id); exists == false {
 		return common.MissingParameter()
 	} else if errors := context.Bind(&productJson); errors != nil {
 		return http.StatusBadRequest, common.JSON(errors)
-	} else if barcode != productJson.Barcode || username != common.AdminAccount {
-		return common.PermisssionDenied()
 	} else if product, errors := updateProduct(database, barcode, productJson); errors != nil {
 		return http.StatusInternalServerError, common.JSON(errors)
 	} else {
@@ -61,10 +61,10 @@ func Update(context *gin.Context, database *sqlx.DB, username string) (int, inte
 
 func Delete(context *gin.Context, database *sqlx.DB, username string) (int, interface{}) {
 
-	if barcode, exists := context.Params.Get(common.Id); exists == false {
-		return common.MissingParameter()
-	} else if username != common.AdminAccount {
+	if username != common.AdminAccount {
 		return common.PermisssionDenied()
+	} else if barcode, exists := context.Params.Get(common.Id); exists == false {
+		return common.MissingParameter()
 	} else if _, errors := deleteProduct(database, barcode); errors != nil {
 		return http.StatusInternalServerError, common.JSON(errors)
 	} else {

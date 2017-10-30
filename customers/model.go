@@ -62,10 +62,21 @@ type CustomerList struct {
 	UpdatedAt time.Time `binding:"required" json:"updated_at" db:"updated_at"`
 }
 
-type CustomerPOST struct {
+type CustomerInsert struct {
 	Name       string         `binding:"required" json:"name"`
 	Country    string         `binding:"required" json:"country"`
 	Username   string         `binding:"required" json:"username"`
+	Password   string         `binding:"required" json:"password"`
+	Address1   string         `binding:"required" json:"address1"`
+	Address2   string         `binding:"required" json:"address2"`
+	PublicKey  string         `binding:"required" json:"public_key"`
+	TaxNumber  string         `binding:"required" json:"tax_number"`
+	CreditCard CreditCardJSON `binding:"required" json:"credit_card"`
+}
+
+type CustomerUpdate struct {
+	Name       string         `binding:"required" json:"name"`
+	Country    string         `binding:"required" json:"country"`
 	Password   string         `binding:"required" json:"password"`
 	Address1   string         `binding:"required" json:"address1"`
 	Address2   string         `binding:"required" json:"address2"`
@@ -108,7 +119,7 @@ func Migrate(database *sqlx.DB) {
 		id serial NOT NULL CONSTRAINT customers_pkey PRIMARY KEY,
 		name TEXT NOT NULL,
 		country VARCHAR(2) NOT NULL,
-		username VARCHAR(32) NOT NULL CONSTRAINT customers_username_key UNIQUE,
+		username VARCHAR(32) NOT NULL UNIQUE,
 		password VARCHAR(64) NOT NULL,
 		address1 TEXT NOT NULL,
 		address2 TEXT NOT NULL,
@@ -121,12 +132,13 @@ func Migrate(database *sqlx.DB) {
 			REFERENCES credit_cards(id) ON UPDATE CASCADE ON DELETE CASCADE)
 	`); errors == nil {
 
+		database.MustExec("CREATE INDEX IF NOT EXISTS idx_customers_username ON customers(username)")
 		user1Password, _ := common.GeneratePassword("admin")
 		user2Password, _ := common.GeneratePassword("r0wsauce")
 		user3Password, _ := common.GeneratePassword("bighotshaq")
 		user4Password, _ := common.GeneratePassword("skibidipoop")
 
-		insertCustomer(database, CustomerPOST{
+		insertCustomer(database, CustomerInsert{
 			Name:      "Administrator",
 			Username:  "admin",
 			Password:  user1Password,
@@ -138,7 +150,7 @@ func Migrate(database *sqlx.DB) {
 qa1Rm8Zr+V0+VCp9swcCAwEAAQ==`,
 		}, 1)
 
-		insertCustomer(database, CustomerPOST{
+		insertCustomer(database, CustomerInsert{
 			Name:      "Diogo Marques",
 			Username:  "marques999",
 			Password:  user2Password,
@@ -150,7 +162,7 @@ qa1Rm8Zr+V0+VCp9swcCAwEAAQ==`,
 FcVTBd+TBe2sEshVefUCAwEAAQ==`,
 		}, 2)
 
-		insertCustomer(database, CustomerPOST{
+		insertCustomer(database, CustomerInsert{
 			Username:  "jabst",
 			Password:  user3Password,
 			Name:      "José Teixeira",
@@ -162,7 +174,7 @@ FcVTBd+TBe2sEshVefUCAwEAAQ==`,
 08HLhNfdPr2XC8ZzLpECAwEAAQ==`,
 		}, 3)
 
-		insertCustomer(database, CustomerPOST{
+		insertCustomer(database, CustomerInsert{
 			Username:  "somouco",
 			Name:      "Carlos Samouco",
 			Password:  user4Password,

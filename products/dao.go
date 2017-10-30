@@ -5,6 +5,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/Masterminds/squirrel"
 	"github.com/marques999/acme-server/common"
+	"time"
 )
 
 var preloadList = common.SqlBuilder().Select("*").From(Products)
@@ -36,7 +37,7 @@ var preloadInsert = common.SqlBuilder().Insert(Products).Columns(
 	Name, Brand, Price, Barcode, ImageUri, Description,
 ).Suffix(common.ReturningRow)
 
-func insertProduct(database *sqlx.DB, productJson ProductJSON) (*Product, error) {
+func insertProduct(database *sqlx.DB, productJson ProductInsert) (*Product, error) {
 
 	if query, args, errors := preloadInsert.Values(
 		productJson.Name,
@@ -57,14 +58,15 @@ var preloadBarcode = common.SqlBuilder().Select("*")
 var preloadDelete = common.SqlBuilder().Delete(Products)
 var preloadUpdate = common.SqlBuilder().Update(Products).Suffix(common.ReturningRow)
 
-func updateProduct(database *sqlx.DB, barcode string, productJson ProductJSON) (*Product, error) {
+func updateProduct(database *sqlx.DB, barcode string, productJson ProductUpdate) (*Product, error) {
 
 	if query, args, errors := preloadUpdate.SetMap(map[string]interface{}{
-		Name:        productJson.Name,
-		Brand:       productJson.Brand,
-		Price:       productJson.Price,
-		ImageUri:    productJson.ImageUri,
-		Description: productJson.Description,
+		Name:             productJson.Name,
+		Brand:            productJson.Brand,
+		Price:            productJson.Price,
+		ImageUri:         productJson.ImageUri,
+		Description:      productJson.Description,
+		common.UpdatedAt: time.Now(),
 	}).Where(squirrel.Eq{Barcode: barcode}).ToSql(); errors != nil {
 		return nil, errors
 	} else {

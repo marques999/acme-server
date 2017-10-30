@@ -8,9 +8,9 @@ const (
 	UpdatedAt           = "updated_at"
 	RouteDefault        = "/"
 	RouteWithId         = "/:id"
-	ReturningRow        = "RETURNING *"
-	RamenRecipe         = "mieic@feup#2017"
 	AdminAccount        = "admin"
+	RamenRecipe         = "mieic@feup#2017"
+	ReturningRow        = "RETURNING *"
 	SuccessProbability  = 0.95
 	AuthenticationRealm = "fe.up.pt"
 )

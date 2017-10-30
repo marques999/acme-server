@@ -41,7 +41,7 @@ func Insert(context *gin.Context, database *sqlx.DB, username string) (int, inte
 		return http.StatusBadRequest, common.JSON(errors)
 	} else if customer, errors := customers.GetCustomer(database, username); errors != nil {
 		return http.StatusUnauthorized, common.JSON(errors)
-	} else if errors = VerifySignature(customer.PublicKey, orderPOST.Signature, jsonProducts); errors != nil {
+	} else if errors = verifySignature(customer.PublicKey, orderPOST.Signature, jsonProducts); errors != nil {
 		return http.StatusUnauthorized, common.JSON(errors)
 	} else if order, errors := insertOrder(database, customer, orderPOST.Products); errors != nil {
 		return http.StatusInternalServerError, common.JSON(errors)
@@ -52,11 +52,11 @@ func Insert(context *gin.Context, database *sqlx.DB, username string) (int, inte
 
 func Purchase(context *gin.Context, database *sqlx.DB, customer string) (int, interface{}) {
 
-	if token, exists := context.Params.Get(common.Id); exists == false {
+	if customer != common.AdminAccount {
+		return common.PermisssionDenied()
+	} else if token, exists := context.Params.Get(common.Id); exists == false {
 		return common.MissingParameter()
-	} else if order, errors := updateOrder(database, token, customer, map[string]interface{}{
-		Status: Purchased,
-	}); errors != nil {
+	} else if order, errors := updateOrder(database, token, customer); errors != nil {
 		return http.StatusInternalServerError, common.JSON(errors)
 	} else if customerCart, errors := getProducts(database, order.ID); errors != nil {
 		return http.StatusInternalServerError, common.JSON(errors)

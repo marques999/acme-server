@@ -25,11 +25,19 @@ type Product struct {
 	Description string  `binding:"required" json:"description"`
 }
 
-type ProductJSON struct {
+type ProductInsert struct {
 	Name        string  `binding:"required" json:"name"`
 	Brand       string  `binding:"required" json:"brand"`
 	Price       float64 `binding:"required" json:"price"`
 	Barcode     string  `binding:"required" json:"barcode"`
+	ImageUri    string  `binding:"required" json:"image_uri" db:"image_uri"`
+	Description string  `binding:"required" json:"description"`
+}
+
+type ProductUpdate struct {
+	Name        string  `binding:"required" json:"name"`
+	Brand       string  `binding:"required" json:"brand"`
+	Price       float64 `binding:"required" json:"price"`
 	ImageUri    string  `binding:"required" json:"image_uri" db:"image_uri"`
 	Description string  `binding:"required" json:"description"`
 }
@@ -41,7 +49,7 @@ func Migrate(database *sqlx.DB) {
 		name TEXT NOT NULL,
 		brand TEXT NOT NULL,
 		price NUMERIC NOT NULL,
-		barcode TEXT NOT NULL,
+		barcode TEXT UNIQUE NOT NULL,
 		image_uri TEXT NOT NULL,
 		description TEXT NOT NULL,
 		created_at timestamp WITH time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
@@ -49,9 +57,8 @@ func Migrate(database *sqlx.DB) {
 	`); errors == nil {
 
 		database.MustExec("CREATE INDEX IF NOT EXISTS idx_products_barcode ON products (barcode)")
-		database.MustExec("CREATE UNIQUE INDEX IF NOT EXISTS uix_products_barcode ON products (barcode)")
 
-		insertProduct(database, ProductJSON{
+		insertProduct(database, ProductInsert{
 			Brand:    "Acer",
 			Name:     "Aspire E5-571G-72M5",
 			Price:    490.00,
@@ -62,7 +69,7 @@ func Migrate(database *sqlx.DB) {
 				"components, color choices, and a textured metallic finish, the Aspire E makes everyday better.",
 		})
 
-		insertProduct(database, ProductJSON{
+		insertProduct(database, ProductInsert{
 			Brand:    "Cooler Master",
 			Name:     "MasterKeys Lite L Combo",
 			Price:    54.99,
@@ -76,7 +83,7 @@ func Migrate(database *sqlx.DB) {
 				"as fast as you want, even during intense gaming. Be in total control.",
 		})
 
-		insertProduct(database, ProductJSON{
+		insertProduct(database, ProductInsert{
 			Brand:    "MSI",
 			Name:     "GeForce GTX 1060 Gaming X 6GB",
 			Price:    339.00,
@@ -95,7 +102,7 @@ func Migrate(database *sqlx.DB) {
 				"smoothest, most power-efficient gaming experiences.",
 		})
 
-		insertProduct(database, ProductJSON{
+		insertProduct(database, ProductInsert{
 			Brand:    "Asus",
 			Name:     "Z170 Pro Gaming",
 			Price:    164.91,
@@ -111,7 +118,7 @@ func Migrate(database *sqlx.DB) {
 				"Radar ll: Scan and detect your enemies to dominate",
 		})
 
-		insertProduct(database, ProductJSON{
+		insertProduct(database, ProductInsert{
 			Brand:    "Intel",
 			Name:     "i5-6600K 3.5GHz 6MB Sk1151",
 			Price:    279.90,
@@ -123,7 +130,7 @@ func Migrate(database *sqlx.DB) {
 				"offer similar performance.",
 		})
 
-		insertProduct(database, ProductJSON{
+		insertProduct(database, ProductInsert{
 			Brand:    "G.Skill",
 			Name:     "Trident Z 16GB (2x8GB) DDR4-3000MHz CL15",
 			Price:    192.50,
@@ -138,7 +145,7 @@ func Migrate(database *sqlx.DB) {
 				"new overclocking records.",
 		})
 
-		insertProduct(database, ProductJSON{
+		insertProduct(database, ProductInsert{
 			Brand:    "Arctic",
 			Name:     "MX-4 (4g)",
 			Barcode:  "872767003767",

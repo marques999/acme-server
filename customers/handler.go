@@ -43,7 +43,7 @@ func Find(context *gin.Context, database *sqlx.DB, username string) (int, interf
 
 func Post(context *gin.Context, database *sqlx.DB) (int, interface{}) {
 
-	customerPOST := CustomerPOST{}
+	customerPOST := CustomerInsert{}
 
 	if errors := context.Bind(&customerPOST); errors != nil {
 		return http.StatusBadRequest, common.JSON(errors)
@@ -60,7 +60,7 @@ func Post(context *gin.Context, database *sqlx.DB) (int, interface{}) {
 
 func Put(context *gin.Context, database *sqlx.DB, username string) (int, interface{}) {
 
-	customerPOST := CustomerPOST{}
+	customerPOST := CustomerUpdate{}
 
 	if id, exists := context.Params.Get(common.Id); exists == false {
 		return common.MissingParameter()

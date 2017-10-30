@@ -43,7 +43,7 @@ var preloadInsert = common.SqlBuilder().Insert(Customers).Columns(
 	Address2, PublicKey, TaxNumber, CreditCardID,
 ).Suffix(common.ReturningRow)
 
-func insertCustomer(database *sqlx.DB, customerPOST CustomerPOST, creditCardId int) (*Customer, error) {
+func insertCustomer(database *sqlx.DB, customerPOST CustomerInsert, creditCardId int) (*Customer, error) {
 
 	if password, errors := common.GeneratePassword(customerPOST.Password); errors != nil {
 		return nil, errors
@@ -69,15 +69,17 @@ var preloadDelete = common.SqlBuilder().Delete(Customers).Suffix(common.Returnin
 var preloadUpdate = common.SqlBuilder().Update(Customers).Suffix(common.ReturningRow)
 var preloadLogin = common.SqlBuilder().Select(Password).From(Customers).Limit(1)
 
-func updateCustomer(database *sqlx.DB, username string, customerPOST *CustomerPOST) (*Customer, error) {
+func updateCustomer(database *sqlx.DB, username string, customerPOST *CustomerUpdate) (*Customer, error) {
 
-	if query, args, errors := preloadUpdate.SetMap(map[string]interface{}{
-		Password:         customerPOST.Password,
+	if password, errors := common.GeneratePassword(customerPOST.Password); errors != nil {
+		return nil, errors
+	} else if query, args, errors := preloadUpdate.SetMap(map[string]interface{}{
+		Password:         password,
+		Name:             customerPOST.Name,
+		Country:          customerPOST.Country,
 		Address1:         customerPOST.Address1,
 		Address2:         customerPOST.Address2,
 		TaxNumber:        customerPOST.TaxNumber,
-		Country:          customerPOST.Country,
-		Name:             customerPOST.Name,
 		common.UpdatedAt: time.Now(),
 	}).Where(squirrel.Eq{Username: username}).ToSql(); errors != nil {
 		return nil, errors
@@ -108,20 +110,6 @@ func deleteCustomer(database *sqlx.DB, username string) (*Customer, error) {
 	} else {
 		var customer Customer
 		return &customer, database.Get(&customer, query, args...)
-	}
-}
-
-var preloadCardGet = common.SqlBuilder().Select("*").From(CreditCards).Limit(1)
-
-func GetById(database *sqlx.DB, creditCardId int) (*CreditCard, error) {
-
-	if query, args, errors := preloadCardGet.Where(
-		squirrel.Eq{common.Id: creditCardId},
-	).ToSql(); errors != nil {
-		return nil, errors
-	} else {
-		var creditCard CreditCard
-		return &creditCard, database.Get(&creditCard, query, args...)
 	}
 }
 

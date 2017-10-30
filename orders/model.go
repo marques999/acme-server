@@ -4,8 +4,8 @@ import (
 	"time"
 	"github.com/jmoiron/sqlx"
 	"github.com/marques999/acme-server/common"
-	"github.com/marques999/acme-server/customers"
 	"github.com/marques999/acme-server/products"
+	"github.com/marques999/acme-server/customers"
 )
 
 const (
@@ -25,22 +25,14 @@ const (
 	Quantity           = "quantity"
 )
 
-type OrderPOST struct {
-	Signature string             `binding:"required" json:"signature"`
-	Products  []CustomerCartPOST `binding:"required" json:"body"`
-}
-
-type CustomerCartPOST struct {
-	Quantity int    `binding:"required" json:"quantity"`
-	Product  string `binding:"required" json:"product"`
-}
-
-type CustomerCartJSON struct {
-	Quantity int                  `binding:"required" json:"quantity"`
-	Product  products.ProductJSON `binding:"required" json:"product"`
-}
-
 type Order struct {
+	common.Model
+	Status   int
+	Customer string
+	Token    string
+}
+
+type OrderJSON struct {
 	common.Model
 	Status   int     `binding:"required" json:"status"`
 	Count    int     `binding:"required" json:"count"`
@@ -49,9 +41,24 @@ type Order struct {
 	Token    string  `binding:"required" json:"token"`
 }
 
+type OrderPOST struct {
+	Signature string             `binding:"required" json:"signature"`
+	Products  []CustomerCartPOST `binding:"required" json:"payload"`
+}
+
+type CustomerCartPOST struct {
+	Quantity int    `binding:"required" json:"quantity"`
+	Product  string `binding:"required" json:"product"`
+}
+
+type CustomerCartJSON struct {
+	Quantity int                    `binding:"required" json:"quantity"`
+	Product  products.ProductInsert `binding:"required" json:"product"`
+}
+
 func Migrate(database *sqlx.DB) {
 
-	database.Exec(`CREATE TABLE orders(
+	if _, errors := database.Exec(`CREATE TABLE orders(
 		id serial NOT NULL CONSTRAINT orders_pkey PRIMARY KEY,
 		created_at timestamp WITH time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
 		updated_at timestamp WITH time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
@@ -60,7 +67,9 @@ func Migrate(database *sqlx.DB) {
 			REFERENCES customers(username) ON UPDATE CASCADE ON DELETE CASCADE,
 		status INTEGER DEFAULT 0 NOT NULL,
 		token TEXT DEFAULT FALSE NOT NULL)
-	`)
+	`); errors != nil {
+		return
+	}
 
 	if _, errors := database.Exec(`CREATE TABLE order_products(
 		order_id INTEGER NOT NULL

@@ -7,6 +7,7 @@ import (
 	"github.com/marques999/acme-server/common"
 	"github.com/marques999/acme-server/products"
 	"github.com/marques999/acme-server/customers"
+	"time"
 )
 
 var preloadGet = common.SqlBuilder().Select(
@@ -24,7 +25,7 @@ var preloadGet = common.SqlBuilder().Select(
 	"products ON products.id = order_products.product_id",
 ).GroupBy("orders.id")
 
-func listOrders(database *sqlx.DB, username string) ([]Order, error) {
+func listOrders(database *sqlx.DB, username string) ([]OrderJSON, error) {
 
 	builder := preloadGet
 
@@ -33,21 +34,21 @@ func listOrders(database *sqlx.DB, username string) ([]Order, error) {
 	}
 
 	if query, args, errors := builder.ToSql(); errors != nil {
-		return []Order{}, nil
+		return []OrderJSON{}, nil
 	} else {
-		var orders []Order
+		var orders []OrderJSON
 		return orders, database.Select(&orders, query, args...)
 	}
 }
 
-func getOrder(database *sqlx.DB, token string, customer string) (*Order, error) {
+func getOrder(database *sqlx.DB, token string, customer string) (*OrderJSON, error) {
 
 	if query, args, errors := preloadGet.Where(getQueryOptions(
 		token, customer,
 	)).ToSql(); errors != nil {
 		return nil, errors
 	} else {
-		var order Order
+		var order OrderJSON
 		return &order, database.Get(&order, query, args...)
 	}
 }
@@ -67,18 +68,24 @@ func insertOrder(
 	if query, args, errors := preloadInsert.Values(
 		customer.Username, generateStatus(customer.CreditCard),
 	).ToSql(); errors != nil {
+		println("InsertProducts1")
 		return nil, errors
 	} else if errors = database.Get(&order, query, args...); errors != nil {
+		println(errors.Error())
 		return nil, errors
 	} else if customerCart, errors := insertProducts(database, order.ID, customerCartPOST); errors != nil {
+		println("InsertProducts3")
 		return nil, errors
 	} else if token, errors := order.generateToken(); errors != nil {
+		println("InsertProducts4")
 		return nil, errors
 	} else if query, args, errors := preloadUpdate.Set(Token, token).Where(
 		squirrel.Eq{common.Id: order.ID},
 	).ToSql(); errors != nil {
+		println("InsertProduct5")
 		return nil, errors
 	} else if errors := database.Get(&order, query, args...); errors != nil {
+		println("InsertProducts6")
 		return nil, errors
 	} else {
 		return order.generateJson(customerCart), nil
@@ -89,15 +96,13 @@ var preloadManyDelete = common.SqlBuilder().Delete(OrderProducts)
 var preloadDelete = common.SqlBuilder().Delete(Orders).Suffix(common.ReturningRow)
 var preloadUpdate = common.SqlBuilder().Update(Orders).Suffix(common.ReturningRow)
 
-func updateOrder(
-	database *sqlx.DB,
-	token string,
-	customer string,
-	what map[string]interface{},
-) (*Order, error) {
+func updateOrder(database *sqlx.DB, token string, customer string) (*Order, error) {
 
-	if query, args, errors := preloadUpdate.SetMap(what).Where(
-		getQueryOptions(token, customer),
+	if query, args, errors := preloadUpdate.SetMap(map[string]interface{}{
+		Status:           Purchased,
+		common.UpdatedAt: time.Now(),
+	}).Where(
+		squirrel.Eq{Token: token},
 	).ToSql(); errors != nil {
 		return nil, errors
 	} else {

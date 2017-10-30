@@ -17,9 +17,9 @@ func GetProductsByBarcode(database *sqlx.DB, barcodeList []string) ([]Product, e
 	}
 }
 
-func (product *Product) GenerateJson() ProductJSON {
+func (product *Product) GenerateJson() ProductInsert {
 
-	return ProductJSON{
+	return ProductInsert{
 		product.Name, product.Brand,
 		product.Price, product.Barcode,
 		product.ImageUri, product.Description,
