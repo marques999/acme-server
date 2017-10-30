@@ -2,18 +2,12 @@
 <project version="4">
   <component name="dataSourceStorageLocal">
     <data-source name="acme@localhost" uuid="39c022d0-3b0c-4369-8a3e-97870c981d51">
-      <database-info product="PostgreSQL" version="9.6.5" jdbc-version="4.2" driver-name="PostgreSQL JDBC Driver" driver-version="42.1.1">
+      <database-info product="PostgreSQL" version="10.0" jdbc-version="4.2" driver-name="PostgreSQL JDBC Driver" driver-version="42.1.1">
         <identifier-quote-string>&quot;</identifier-quote-string>
       </database-info>
       <case-sensitivity plain-identifiers="lower" quoted-identifiers="exact" />
-      <secret-storage>master_key</secret-storage>
       <user-name>acme</user-name>
       <introspection-schemas>acme:public</introspection-schemas>
-    </data-source>
-    <data-source name="acme" uuid="cf6a0bd2-2a8a-43b1-9a63-19dcb95700bd">
-      <database-info product="SQLite" version="3.16.1" jdbc-version="2.1" driver-name="SQLiteJDBC" driver-version="native" />
-      <case-sensitivity plain-identifiers="mixed" quoted-identifiers="mixed" />
-      <introspection-schemas>*:main</introspection-schemas>
     </data-source>
   </component>
 </project>
