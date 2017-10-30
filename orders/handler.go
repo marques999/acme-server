@@ -53,7 +53,7 @@ func Insert(context *gin.Context, database *sqlx.DB, username string) (int, inte
 func Purchase(context *gin.Context, database *sqlx.DB, customer string) (int, interface{}) {
 
 	if customer != common.AdminAccount {
-		return common.PermisssionDenied()
+		return common.PermissionDenied()
 	} else if token, exists := context.Params.Get(common.Id); exists == false {
 		return common.MissingParameter()
 	} else if order, errors := updateOrder(database, token, customer); errors != nil {

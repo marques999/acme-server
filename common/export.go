@@ -31,7 +31,7 @@ func MissingParameter() (int, interface{}) {
 	return http.StatusBadRequest, JSON(MissingParameterError)
 }
 
-func PermisssionDenied() (int, interface{}) {
+func PermissionDenied() (int, interface{}) {
 	return http.StatusUnauthorized, JSON(PermissionDeniedError)
 }
 

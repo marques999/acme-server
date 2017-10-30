@@ -32,7 +32,7 @@ func Insert(context *gin.Context, database *sqlx.DB, username string) (int, inte
 	productJson := ProductInsert{}
 
 	if username != common.AdminAccount {
-		return common.PermisssionDenied()
+		return common.PermissionDenied()
 	} else if errors := context.Bind(&productJson); errors != nil {
 		return http.StatusBadRequest, common.JSON(errors)
 	} else if product, errors := insertProduct(database, productJson); errors != nil {
@@ -47,7 +47,7 @@ func Update(context *gin.Context, database *sqlx.DB, username string) (int, inte
 	productJson := ProductUpdate{}
 
 	if username != common.AdminAccount {
-		return common.PermisssionDenied()
+		return common.PermissionDenied()
 	} else if barcode, exists := context.Params.Get(common.Id); exists == false {
 		return common.MissingParameter()
 	} else if errors := context.Bind(&productJson); errors != nil {
@@ -62,7 +62,7 @@ func Update(context *gin.Context, database *sqlx.DB, username string) (int, inte
 func Delete(context *gin.Context, database *sqlx.DB, username string) (int, interface{}) {
 
 	if username != common.AdminAccount {
-		return common.PermisssionDenied()
+		return common.PermissionDenied()
 	} else if barcode, exists := context.Params.Get(common.Id); exists == false {
 		return common.MissingParameter()
 	} else if _, errors := deleteProduct(database, barcode); errors != nil {

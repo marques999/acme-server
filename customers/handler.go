@@ -20,7 +20,7 @@ func Login(database *sqlx.DB, username string, original string) (string, bool) {
 func List(database *sqlx.DB, username string) (int, interface{}) {
 
 	if username != common.AdminAccount {
-		return common.PermisssionDenied()
+		return common.PermissionDenied()
 	} else if customers, errors := getCustomers(database); errors != nil {
 		return http.StatusInternalServerError, common.JSON(errors)
 	} else {
@@ -33,7 +33,7 @@ func Find(context *gin.Context, database *sqlx.DB, username string) (int, interf
 	if id, exists := context.Params.Get(common.Id); exists == false {
 		return common.MissingParameter()
 	} else if common.HasPermissions(username, id) == false {
-		return common.PermisssionDenied()
+		return common.PermissionDenied()
 	} else if customer, errors := GetCustomer(database, id); errors != nil {
 		return http.StatusInternalServerError, common.JSON(errors)
 	} else {
@@ -48,7 +48,7 @@ func Post(context *gin.Context, database *sqlx.DB) (int, interface{}) {
 	if errors := context.Bind(&customerPOST); errors != nil {
 		return http.StatusBadRequest, common.JSON(errors)
 	} else if customerPOST.Username == common.AdminAccount {
-		return common.PermisssionDenied()
+		return common.PermissionDenied()
 	} else if creditCard, errors := insertCreditCard(database, &customerPOST.CreditCard); errors != nil {
 		return http.StatusInternalServerError, common.JSON(errors)
 	} else if customer, errors := insertCustomer(database, customerPOST, creditCard.ID); errors != nil {
@@ -65,7 +65,7 @@ func Put(context *gin.Context, database *sqlx.DB, username string) (int, interfa
 	if id, exists := context.Params.Get(common.Id); exists == false {
 		return common.MissingParameter()
 	} else if common.HasPermissions(username, id) == false {
-		return common.PermisssionDenied()
+		return common.PermissionDenied()
 	} else if errors := context.Bind(&customerPOST); errors != nil {
 		return http.StatusBadRequest, common.JSON(errors)
 	} else if customer, errors := updateCustomer(database, id, &customerPOST); errors != nil {
@@ -84,7 +84,7 @@ func Delete(context *gin.Context, database *sqlx.DB, username string) (int, inte
 	if id, exists := context.Params.Get(common.Id); exists == false {
 		return common.MissingParameter()
 	} else if common.HasPermissions(username, id) == false {
-		return common.PermisssionDenied()
+		return common.PermissionDenied()
 	} else if customer, errors := deleteCustomer(database, id); errors != nil {
 		return http.StatusInternalServerError, common.JSON(errors)
 	} else if _, errors := deleteCreditCard(database, customer.CreditCardID); errors != nil {
