@@ -63,7 +63,7 @@ func main() {
 		TimeFunc:      time.Now,
 	}
 
-	common.InitializeRoutes(database, middleware, router)
+	common.InitializeRoutes(middleware, router)
 	customers.InitializeRoutes(database, middleware, router)
 	products.InitializeRoutes(database, middleware, router)
 	orders.InitializeRoutes(database, middleware, router)
