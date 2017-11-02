@@ -1,11 +1,6 @@
 package customers
 
-import (
-	"strings"
-	"github.com/jmoiron/sqlx"
-	"github.com/gin-gonic/gin"
-	"github.com/marques999/acme-server/common"
-)
+import "github.com/jmoiron/sqlx"
 
 func generateCustomer(query *sqlx.Rows, invokeNext bool) *Customer {
 
@@ -24,30 +19,4 @@ func generateCustomer(query *sqlx.Rows, invokeNext bool) *Customer {
 		&customer.CreditCard.Number, &customer.CreditCard.Validity)
 
 	return &customer
-}
-
-func (customer *Customer) generateDetails(creditCard *CreditCard) map[string]interface{} {
-
-	if len(creditCard.Number) > 4 {
-
-		creditCard.Number = strings.Repeat(
-			"*", len(creditCard.Number)-4,
-		) + creditCard.Number[len(creditCard.Number)-4:]
-	}
-
-	return gin.H{
-		Name:      customer.Name,
-		Username:  customer.Username,
-		Address1:  customer.Address1,
-		Address2:  customer.Address2,
-		Country:   customer.Country,
-		TaxNumber: customer.TaxNumber,
-		CreditCardData: CreditCardJSON{
-			Type:     creditCard.Type,
-			Number:   creditCard.Number,
-			Validity: creditCard.Validity,
-		},
-		common.CreatedAt: customer.CreatedAt,
-		common.UpdatedAt: customer.UpdatedAt,
-	}
 }

@@ -89,15 +89,15 @@ func updateCustomer(database *sqlx.DB, username string, customerPOST *CustomerUp
 	}
 }
 
-func validateLogin(database *sqlx.DB, username string) (*string, error) {
+func validateLogin(database *sqlx.DB, username string) (string, error) {
 
 	if query, args, errors := preloadLogin.Where(
 		squirrel.Eq{Username: username},
 	).ToSql(); errors != nil {
-		return nil, errors
+		return "", errors
 	} else {
 		var password string
-		return &password, database.Get(&password, query, args...)
+		return password, database.Get(&password, query, args...)
 	}
 }
 

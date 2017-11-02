@@ -65,14 +65,17 @@ func (order *Order) generateJson(customerCart []CustomerCartJSON) *map[string]in
 	}
 }
 
-func (order *OrderJSON) generateJson(customerCart []CustomerCartJSON) map[string]interface{} {
+func (order *OrderJSON) generateJson(
+	customer *customers.Customer,
+	customerCart []CustomerCartJSON,
+) map[string]interface{} {
 
 	return map[string]interface{}{
 		Token:            order.Token,
 		Count:            order.Count,
 		Total:            order.Total,
 		Status:           order.Status,
-		Customer:         order.Customer,
+		Customer:         customer.GenerateDetails(&customer.CreditCard),
 		Products:         customerCart,
 		common.CreatedAt: order.CreatedAt,
 		common.UpdatedAt: order.UpdatedAt,
@@ -90,7 +93,7 @@ func generateStatus(creditCard customers.CreditCard) int {
 
 func generateCustomerCart(query *sqlx.Rows) []CustomerCartJSON {
 
-	orderProducts := []CustomerCartJSON{}
+	var orderProducts []CustomerCartJSON
 
 	for query.Next() {
 

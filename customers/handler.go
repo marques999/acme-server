@@ -13,7 +13,7 @@ func Login(database *sqlx.DB, username string, original string) (string, bool) {
 	if hashed, errors := validateLogin(database, username); errors != nil {
 		return username, false
 	} else {
-		return username, bcrypt.CompareHashAndPassword([]byte(*hashed), []byte(original)) == nil
+		return username, bcrypt.CompareHashAndPassword([]byte(hashed), []byte(original)) == nil
 	}
 }
 
@@ -37,7 +37,7 @@ func Find(context *gin.Context, database *sqlx.DB, username string) (int, interf
 	} else if customer, errors := GetCustomer(database, id); errors != nil {
 		return http.StatusInternalServerError, common.JSON(errors)
 	} else {
-		return http.StatusOK, customer.generateDetails(&customer.CreditCard)
+		return http.StatusOK, customer.GenerateDetails(&customer.CreditCard)
 	}
 }
 
@@ -54,7 +54,7 @@ func Post(context *gin.Context, database *sqlx.DB) (int, interface{}) {
 	} else if customer, errors := insertCustomer(database, customerPOST, creditCard.ID); errors != nil {
 		return http.StatusInternalServerError, common.JSON(errors)
 	} else {
-		return http.StatusOK, customer.generateDetails(creditCard)
+		return http.StatusOK, customer.GenerateDetails(creditCard)
 	}
 }
 
@@ -75,7 +75,7 @@ func Put(context *gin.Context, database *sqlx.DB, username string) (int, interfa
 	); errors != nil {
 		return http.StatusInternalServerError, common.JSON(errors)
 	} else {
-		return http.StatusOK, customer.generateDetails(creditCard)
+		return http.StatusOK, customer.GenerateDetails(creditCard)
 	}
 }
 

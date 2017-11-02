@@ -96,7 +96,7 @@ var preloadManyDelete = common.SqlBuilder().Delete(OrderProducts)
 var preloadDelete = common.SqlBuilder().Delete(Orders).Suffix(common.ReturningRow)
 var preloadUpdate = common.SqlBuilder().Update(Orders).Suffix(common.ReturningRow)
 
-func updateOrder(database *sqlx.DB, token string, customer string) (*Order, error) {
+func updateOrder(database *sqlx.DB, token string) (*Order, error) {
 
 	if query, args, errors := preloadUpdate.SetMap(map[string]interface{}{
 		Status:           Purchased,

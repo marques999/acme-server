@@ -18,16 +18,18 @@ func List(database *sqlx.DB, username string) (int, interface{}) {
 	}
 }
 
-func Find(context *gin.Context, database *sqlx.DB, customer string) (int, interface{}) {
+func Find(context *gin.Context, database *sqlx.DB, username string) (int, interface{}) {
 
 	if token, exists := context.Params.Get(common.Id); exists == false {
 		return common.MissingParameter()
-	} else if order, errors := getOrder(database, token, customer); errors != nil {
+	} else if order, errors := getOrder(database, token, username); errors != nil {
 		return http.StatusNotFound, common.JSON(errors)
+	} else if customer, errors := customers.GetCustomer(database, username); errors != nil {
+		return http.StatusInternalServerError, common.JSON(errors)
 	} else if customerCart, errors := getProducts(database, order.ID); errors != nil {
 		return http.StatusInternalServerError, common.JSON(errors)
 	} else {
-		return http.StatusCreated, order.generateJson(customerCart)
+		return http.StatusCreated, order.generateJson(customer, customerCart)
 	}
 }
 
@@ -56,7 +58,7 @@ func Purchase(context *gin.Context, database *sqlx.DB, customer string) (int, in
 		return common.PermissionDenied()
 	} else if token, exists := context.Params.Get(common.Id); exists == false {
 		return common.MissingParameter()
-	} else if order, errors := updateOrder(database, token, customer); errors != nil {
+	} else if order, errors := updateOrder(database, token); errors != nil {
 		return http.StatusInternalServerError, common.JSON(errors)
 	} else if customerCart, errors := getProducts(database, order.ID); errors != nil {
 		return http.StatusInternalServerError, common.JSON(errors)

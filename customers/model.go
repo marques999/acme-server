@@ -133,15 +133,11 @@ func Migrate(database *sqlx.DB) {
 	`); errors == nil {
 
 		database.MustExec("CREATE INDEX IF NOT EXISTS idx_customers_username ON customers(username)")
-		user1Password, _ := common.GeneratePassword("admin")
-		user2Password, _ := common.GeneratePassword("r0wsauce")
-		user3Password, _ := common.GeneratePassword("bighotshaq")
-		user4Password, _ := common.GeneratePassword("skibidipoop")
 
 		insertCustomer(database, CustomerInsert{
 			Name:      "Administrator",
 			Username:  "admin",
-			Password:  user1Password,
+			Password:  "admin",
 			TaxNumber: "930248516",
 			Address1:  "Rua Branco, Nº 25",
 			Address2:  "8681-962 Tomar",
@@ -153,7 +149,7 @@ qa1Rm8Zr+V0+VCp9swcCAwEAAQ==`,
 		insertCustomer(database, CustomerInsert{
 			Name:      "Diogo Marques",
 			Username:  "marques999",
-			Password:  user2Password,
+			Password:  "r0wsauce",
 			TaxNumber: "761489053",
 			Address1:  "Rua São Diogo, Nº 855",
 			Address2:  "6311-969 Vendas Novas",
@@ -164,7 +160,7 @@ FcVTBd+TBe2sEshVefUCAwEAAQ==`,
 
 		insertCustomer(database, CustomerInsert{
 			Username:  "jabst",
-			Password:  user3Password,
+			Password:  "bighotshaq",
 			Name:      "José Teixeira",
 			TaxNumber: "685102439",
 			Address1:  "Avenida Lima, Nº 167",
@@ -177,7 +173,7 @@ FcVTBd+TBe2sEshVefUCAwEAAQ==`,
 		insertCustomer(database, CustomerInsert{
 			Username:  "somouco",
 			Name:      "Carlos Samouco",
-			Password:  user4Password,
+			Password:  "skibidipapa",
 			TaxNumber: "537812640",
 			Address1:  "Travessa Mia Assunção, Nº 532",
 			Address2:  "5334-964 Coimbra",
