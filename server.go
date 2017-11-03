@@ -19,18 +19,19 @@ import (
 func main() {
 
 	gin.SetMode(gin.ReleaseMode)
-
+	
 	if errors := godotenv.Load(); errors != nil {
 		log.Fatal(errors.Error())
 	}
-
-	database := sqlx.MustConnect("postgres", fmt.Sprintf(
-		"host=localhost user=%s dbname=%s sslmode=disable password=%s",
+    
+    database := sqlx.MustConnect("postgres", fmt.Sprintf(
+		"postgresql://%s:%s@%s:5432/%s?sslmode=disable",
 		getEnvOrDefault("POSTGRES_USER", "postgres"),
+		getEnvOrDefault("POSTGRES_PASSWORD", "postgres"),	
+		getEnvOrDefault("POSTGRES_HOST", "localhost"),
 		getEnvOrDefault("POSTGRES_DB", "postgres"),
-		getEnvOrDefault("POSTGRES_PASSWORD", "postgres"),
 	))
-
+	
 	defer database.Close()
 	customers.Migrate(database)
 	products.Migrate(database)

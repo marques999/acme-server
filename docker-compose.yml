@@ -1,14 +1,25 @@
-version: "2.1"
+version: "3"
 
 services:
-  database:
+  postgres:
     image: postgres
+    env_file: ./.env
     volumes:
       - /var/lib/postgresql
-    ports: 
+    ports:
       - "5432:5432"
-    env_file:
-      - ./.env
+
+  golang:
+    build: .
+    command: ["./wait-for-postgres.sh", "postgres:5432", "--", "go", "run", "server.go"]
+    volumes:
+      - .:/go/src/github.com/marques999/acme-server
+    ports:
+      - "${ACME_PORT}:${ACME_PORT}"
+    depends_on:
+      - postgres
+    environment:
+      - POSTGRES_HOST=postgres
 
   pgadmin:
     image: fenglc/pgadmin4
@@ -16,5 +27,5 @@ services:
       - ./pgadmin:/data
     ports:
       - "5050:5050"
-    links:
-      - database:postgres
+    depends_on:
+      - postgres
