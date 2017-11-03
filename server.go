@@ -19,7 +19,7 @@ import (
 func main() {
 
 	gin.SetMode(gin.ReleaseMode)
-	
+
 	if errors := godotenv.Load(); errors != nil {
 		log.Fatal(errors.Error())
 	}
@@ -31,7 +31,7 @@ func main() {
 		getEnvOrDefault("POSTGRES_HOST", "localhost"),
 		getEnvOrDefault("POSTGRES_DB", "postgres"),
 	))
-	
+
 	defer database.Close()
 	customers.Migrate(database)
 	products.Migrate(database)
