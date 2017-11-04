@@ -24,7 +24,7 @@ func Find(context *gin.Context, database *sqlx.DB, username string) (int, interf
 		return common.MissingParameter()
 	} else if order, errors := getOrder(database, token, username); errors != nil {
 		return http.StatusNotFound, common.JSON(errors)
-	} else if customer, errors := customers.GetCustomer(database, username); errors != nil {
+	} else if customer, errors := customers.GetCustomer(database, order.Customer); errors != nil {
 		return http.StatusInternalServerError, common.JSON(errors)
 	} else if customerCart, errors := getProducts(database, order.ID); errors != nil {
 		return http.StatusInternalServerError, common.JSON(errors)

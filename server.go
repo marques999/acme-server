@@ -23,11 +23,11 @@ func main() {
 	if errors := godotenv.Load(); errors != nil {
 		log.Fatal(errors.Error())
 	}
-    
-    database := sqlx.MustConnect("postgres", fmt.Sprintf(
+
+	database := sqlx.MustConnect("postgres", fmt.Sprintf(
 		"postgresql://%s:%s@%s:5432/%s?sslmode=disable",
 		getEnvOrDefault("POSTGRES_USER", "postgres"),
-		getEnvOrDefault("POSTGRES_PASSWORD", "postgres"),	
+		getEnvOrDefault("POSTGRES_PASSWORD", "postgres"),
 		getEnvOrDefault("POSTGRES_HOST", "localhost"),
 		getEnvOrDefault("POSTGRES_DB", "postgres"),
 	))
@@ -49,15 +49,22 @@ func main() {
 	}))
 
 	middleware := &jwt.GinJWTMiddleware{
-		Realm:      common.AuthenticationRealm,
-		Key:        []byte(common.RamenRecipe),
-		Timeout:    time.Hour,
-		MaxRefresh: time.Hour,
+		Realm:            common.AuthenticationRealm,
+		Key:              []byte(common.RamenRecipe),
+		Timeout:          time.Hour,
+		MaxRefresh:       time.Hour,
+		SigningAlgorithm: "HS512",
 		Unauthorized: func(context *gin.Context, statusCode int, message string) {
 			context.JSON(statusCode, gin.H{"error": message})
 		},
 		Authenticator: func(username string, password string, context *gin.Context) (string, bool) {
 			return customers.Login(database, username, password)
+		},
+		PayloadFunc: func(username string) map[string]interface{} {
+			customer, _ := customers.GetCustomer(database, username)
+			return map[string]interface{}{
+				"customer": customer.GenerateDetails(&customer.CreditCard),
+			}
 		},
 		TokenLookup:   "header:Authorization",
 		TokenHeadName: "Bearer",
