@@ -62,7 +62,7 @@ func Migrate(database *sqlx.DB) {
 			Brand:    "Acer",
 			Name:     "Aspire E5-571G-72M5",
 			Price:    490.00,
-			Barcode:  "4713147489589",
+			Barcode:  "887899689185",
 			ImageUri: "https://www.notebookcheck.net/fileadmin/Notebooks/Acer/Aspire_E5-571G-536E/Aspire_E5_571_531_551_521_511_nontouch_black_glare_gallery_01.png",
 			Description: "Aspire E Series laptops are great choices for everyday users, with lots of " +
 				"appealing options and an attractive design that exceed expectations. With many enhanced " +
