@@ -1,13 +1,13 @@
 package orders
 
 import (
+	"time"
 	"database/sql"
 	"github.com/jmoiron/sqlx"
 	"github.com/Masterminds/squirrel"
 	"github.com/marques999/acme-server/common"
 	"github.com/marques999/acme-server/products"
 	"github.com/marques999/acme-server/customers"
-	"time"
 )
 
 var preloadGet = common.SqlBuilder().Select(
@@ -68,24 +68,18 @@ func insertOrder(
 	if query, args, errors := preloadInsert.Values(
 		customer.Username, generateStatus(customer.CreditCard),
 	).ToSql(); errors != nil {
-		println("InsertProducts1")
 		return nil, errors
 	} else if errors = database.Get(&order, query, args...); errors != nil {
-		println(errors.Error())
 		return nil, errors
 	} else if customerCart, errors := insertProducts(database, order.ID, customerCartPOST); errors != nil {
-		println("InsertProducts3")
 		return nil, errors
 	} else if token, errors := order.generateToken(); errors != nil {
-		println("InsertProducts4")
 		return nil, errors
 	} else if query, args, errors := preloadUpdate.Set(Token, token).Where(
 		squirrel.Eq{common.Id: order.ID},
 	).ToSql(); errors != nil {
-		println("InsertProduct5")
 		return nil, errors
 	} else if errors := database.Get(&order, query, args...); errors != nil {
-		println("InsertProducts6")
 		return nil, errors
 	} else {
 		return order.generateJson(customerCart), nil

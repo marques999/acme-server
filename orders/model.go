@@ -92,7 +92,7 @@ func Migrate(database *sqlx.DB) {
 		Username:   "admin",
 		CreditCard: creditCard,
 	}, []CustomerCartPOST{
-		{1, "4713147489589"},
+		{1, "887899689185"},
 	})
 
 	insertOrder(database, &customers.Customer{

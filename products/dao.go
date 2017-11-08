@@ -1,11 +1,11 @@
 package products
 
 import (
+	"time"
 	"database/sql"
 	"github.com/jmoiron/sqlx"
 	"github.com/Masterminds/squirrel"
 	"github.com/marques999/acme-server/common"
-	"time"
 )
 
 var preloadList = common.SqlBuilder().Select("*").From(Products)

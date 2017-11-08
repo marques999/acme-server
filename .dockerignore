@@ -3,3 +3,6 @@ Dockerfile
 docker-compose.yml
 .idea
 .git
+acme-server
+acme-server.exe
+README.md
