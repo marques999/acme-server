@@ -118,7 +118,7 @@ func Migrate(database *sqlx.DB) {
 	if _, errors := database.Exec(`CREATE TABLE customers(
 		id serial NOT NULL CONSTRAINT customers_pkey PRIMARY KEY,
 		name TEXT NOT NULL,
-		country VARCHAR(3) NOT NULL,
+		country VARCHAR(2) NOT NULL,
 		username VARCHAR(32) NOT NULL UNIQUE,
 		password VARCHAR(64) NOT NULL,
 		address1 TEXT NOT NULL,
@@ -141,7 +141,7 @@ func Migrate(database *sqlx.DB) {
 			TaxNumber: "930248516",
 			Address1:  "Rua Branco, Nº 25",
 			Address2:  "8681-962 Tomar",
-			Country:   "ESP",
+			Country:   "ES",
 			PublicKey: `MEowDQYJKoZIhvcNAQEBBQADOQAwNgIvAL1L9h1N9xqNe0I4ddyjKD6lv0ArcEhBJbU550urvmvJ
 qa1Rm8Zr+V0+VCp9swcCAwEAAQ==`,
 		}, 1)
@@ -153,7 +153,7 @@ qa1Rm8Zr+V0+VCp9swcCAwEAAQ==`,
 			TaxNumber: "761489053",
 			Address1:  "Rua São Diogo, Nº 855",
 			Address2:  "6311-969 Vendas Novas",
-			Country:   "JPN",
+			Country:   "JP",
 			PublicKey: `MEowDQYJKoZIhvcNAQEBBQADOQAwNgIvAKCRuhMUuFoJvDVeicvyfyQf9ADQ1qNe+dabNSpOkr76
 FcVTBd+TBe2sEshVefUCAwEAAQ==`,
 		}, 2)
@@ -165,7 +165,7 @@ FcVTBd+TBe2sEshVefUCAwEAAQ==`,
 			TaxNumber: "685102439",
 			Address1:  "Avenida Lima, Nº 167",
 			Address2:  "7049-952 Santa Cruz",
-			Country:   "POR",
+			Country:   "PT",
 			PublicKey: `MEowDQYJKoZIhvcNAQEBBQADOQAwNgIvALLIEFJe1v3hiGpzYlzo/hxEXBW2XrA47b/S2i0X7ZZv
 08HLhNfdPr2XC8ZzLpECAwEAAQ==`,
 		}, 3)
@@ -177,7 +177,7 @@ FcVTBd+TBe2sEshVefUCAwEAAQ==`,
 			TaxNumber: "537812640",
 			Address1:  "Travessa Mia Assunção, Nº 532",
 			Address2:  "5334-964 Coimbra",
-			Country:   "FRA",
+			Country:   "FR",
 			PublicKey: `MEowDQYJKoZIhvcNAQEBBQADOQAwNgIvAK0smd9hF2yMJOeidEDq2GieQJY2Ac3bRpoXeOpiD/Oi
 pBrNyqlMpzEKUF917T0CAwEAAQ==`,
 		}, 4)
