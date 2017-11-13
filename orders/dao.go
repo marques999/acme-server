@@ -23,7 +23,11 @@ var preloadGet = common.SqlBuilder().Select(
 	"order_products ON orders.id = order_products.order_id",
 ).Join(
 	"products ON products.id = order_products.product_id",
-).GroupBy("orders.id")
+).GroupBy(
+	"orders.id",
+).OrderBy(
+	"orders.created_at",
+)
 
 func listOrders(database *sqlx.DB, username string) ([]OrderJSON, error) {
 
