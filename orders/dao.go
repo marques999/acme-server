@@ -26,7 +26,7 @@ var preloadGet = common.SqlBuilder().Select(
 ).GroupBy(
 	"orders.id",
 ).OrderBy(
-	"orders.created_at",
+	"orders.created_at DESC",
 )
 
 func listOrders(database *sqlx.DB, username string) ([]OrderJSON, error) {

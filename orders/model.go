@@ -47,8 +47,8 @@ type OrderPOST struct {
 }
 
 type CustomerCartPOST struct {
-	Quantity int    `binding:"required" json:"quantity"`
 	Product  string `binding:"required" json:"product"`
+	Quantity int    `binding:"required" json:"quantity"`
 }
 
 type CustomerCartJSON struct {
@@ -59,9 +59,9 @@ type CustomerCartJSON struct {
 func Migrate(database *sqlx.DB) {
 
 	if _, errors := database.Exec(`CREATE TABLE orders(
-		id serial NOT NULL CONSTRAINT orders_pkey PRIMARY KEY,
-		created_at timestamp WITH time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-		updated_at timestamp WITH time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+		id SERIAL NOT NULL CONSTRAINT orders_pkey PRIMARY KEY,
+		created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
+		updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
 		customer TEXT NOT NULL
 			CONSTRAINT fk_orders_customer
 			REFERENCES customers(username) ON UPDATE CASCADE ON DELETE CASCADE,
@@ -92,29 +92,29 @@ func Migrate(database *sqlx.DB) {
 		Username:   "admin",
 		CreditCard: creditCard,
 	}, []CustomerCartPOST{
-		{1, "887899689185"},
+		{"887899689185", 1},
 	})
 
 	insertOrder(database, &customers.Customer{
 		Username:   "marques999",
 		CreditCard: creditCard,
 	}, []CustomerCartPOST{
-		{3, "824142132142"},
-		{1, "889349114872"},
+		{"824142132142", 3},
+		{"889349114872", 1},
 	})
 
 	insertOrder(database, &customers.Customer{
 		Username:   "jabst",
 		CreditCard: creditCard,
 	}, []CustomerCartPOST{
-		{1, "884102029028"},
-		{1, "889349114872"},
+		{"884102029028", 1},
+		{"889349114872", 1},
 	})
 
 	insertOrder(database, &customers.Customer{
 		Username:   "somouco",
 		CreditCard: creditCard,
 	}, []CustomerCartPOST{
-		{2, "824142132142"},
+		{"824142132142", 2},
 	})
 }
