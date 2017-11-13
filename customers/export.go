@@ -20,7 +20,6 @@ func (customer *Customer) GenerateDetails(creditCard *CreditCard) map[string]int
 		Username:  customer.Username,
 		Address1:  customer.Address1,
 		Address2:  customer.Address2,
-		Country:   customer.Country,
 		TaxNumber: customer.TaxNumber,
 		CreditCardData: CreditCardJSON{
 			Type:     creditCard.Type,

@@ -10,6 +10,7 @@ import (
 )
 
 var MissingParameterError = errors.New("request has missing or invalid \"id\" parameter")
+var PurchaseValidationError = errors.New("credit card validation failed, please check expiration date")
 var PermissionDeniedError = errors.New("user does not have permission to access the requested resource")
 
 func GeneratePassword(original string) (string, error) {

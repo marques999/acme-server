@@ -23,10 +23,6 @@ func InitializeRoutes(database *sqlx.DB, middleware *jwt.GinJWTMiddleware, route
 			context.JSON(Find(context, database, common.ParseId(context)))
 		})
 
-		routes.PUT(common.RouteWithId, func(context *gin.Context) {
-			context.JSON(Purchase(context, database, common.ParseId(context)))
-		})
-
 		routes.DELETE(common.RouteWithId, func(context *gin.Context) {
 			context.JSON(Delete(context, database, common.ParseId(context)))
 		})

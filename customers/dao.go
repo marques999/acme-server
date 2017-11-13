@@ -9,8 +9,8 @@ import (
 )
 
 var preloadList = common.SqlBuilder().Select(
-	Name, Country, Username, Address1, Address2,
-	TaxNumber, common.CreatedAt, common.UpdatedAt,
+	Name, Username, Address1, Address2, TaxNumber,
+	common.CreatedAt, common.UpdatedAt,
 ).From(Customers)
 
 func getCustomers(database *sqlx.DB) ([]CustomerList, error) {
@@ -39,7 +39,7 @@ func GetCustomer(database *sqlx.DB, username string) (*Customer, error) {
 }
 
 var preloadInsert = common.SqlBuilder().Insert(Customers).Columns(
-	Name, Country, Username, Password, Address1,
+	Name, Username, Password, Address1,
 	Address2, PublicKey, TaxNumber, CreditCardID,
 ).Suffix(common.ReturningRow)
 
@@ -49,7 +49,6 @@ func insertCustomer(database *sqlx.DB, customerPOST CustomerInsert, creditCardId
 		return nil, errors
 	} else if query, args, errors := preloadInsert.Values(
 		customerPOST.Name,
-		customerPOST.Country,
 		customerPOST.Username,
 		password,
 		customerPOST.Address1,
@@ -76,7 +75,6 @@ func updateCustomer(database *sqlx.DB, username string, customerPOST *CustomerUp
 	} else if query, args, errors := preloadUpdate.SetMap(map[string]interface{}{
 		Password:         password,
 		Name:             customerPOST.Name,
-		Country:          customerPOST.Country,
 		Address1:         customerPOST.Address1,
 		Address2:         customerPOST.Address2,
 		TaxNumber:        customerPOST.TaxNumber,

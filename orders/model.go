@@ -9,32 +9,26 @@ import (
 )
 
 const (
-	ValidationFailed   = iota
-	ValidationComplete = iota
-	Purchased          = iota
-	Orders             = "orders"
-	Count              = "count"
-	Token              = "token"
-	Total              = "total"
-	Status             = "status"
-	Customer           = "customer"
-	Products           = "products"
-	OrderProducts      = "order_products"
-	OrderID            = "order_id"
-	ProductID          = "product_id"
-	Quantity           = "quantity"
+	Orders        = "orders"
+	Count         = "count"
+	Token         = "token"
+	Total         = "total"
+	Customer      = "customer"
+	Products      = "products"
+	OrderProducts = "order_products"
+	OrderID       = "order_id"
+	ProductID     = "product_id"
+	Quantity      = "quantity"
 )
 
 type Order struct {
 	common.Model
-	Status   int
 	Customer string
 	Token    string
 }
 
 type OrderJSON struct {
 	common.Model
-	Status   int     `binding:"required" json:"status"`
 	Count    int     `binding:"required" json:"count"`
 	Total    float64 `binding:"required" json:"total"`
 	Customer string  `binding:"required" json:"customer"`
@@ -60,13 +54,12 @@ func Migrate(database *sqlx.DB) {
 
 	if _, errors := database.Exec(`CREATE TABLE orders(
 		id SERIAL NOT NULL CONSTRAINT orders_pkey PRIMARY KEY,
+		token TEXT DEFAULT FALSE NOT NULL,
 		created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
 		updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
 		customer TEXT NOT NULL
 			CONSTRAINT fk_orders_customer
-			REFERENCES customers(username) ON UPDATE CASCADE ON DELETE CASCADE,
-		status INTEGER DEFAULT 0 NOT NULL,
-		token TEXT DEFAULT FALSE NOT NULL)
+			REFERENCES customers(username) ON UPDATE CASCADE ON DELETE CASCADE)
 	`); errors != nil {
 		return
 	}

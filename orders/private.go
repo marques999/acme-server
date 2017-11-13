@@ -53,18 +53,6 @@ func (order *Order) generateToken() (string, error) {
 	})
 }
 
-func (order *Order) generateJson(customerCart []CustomerCartJSON) *map[string]interface{} {
-
-	return &map[string]interface{}{
-		Token:            order.Token,
-		Status:           order.Status,
-		Customer:         order.Customer,
-		Products:         customerCart,
-		common.CreatedAt: order.CreatedAt,
-		common.UpdatedAt: order.UpdatedAt,
-	}
-}
-
 func (order *OrderJSON) generateJson(
 	customer *customers.Customer,
 	customerCart []CustomerCartJSON,
@@ -74,7 +62,6 @@ func (order *OrderJSON) generateJson(
 		Token:            order.Token,
 		Count:            order.Count,
 		Total:            order.Total,
-		Status:           order.Status,
 		Customer:         customer.GenerateDetails(&customer.CreditCard),
 		Products:         customerCart,
 		common.CreatedAt: order.CreatedAt,
@@ -82,13 +69,8 @@ func (order *OrderJSON) generateJson(
 	}
 }
 
-func generateStatus(creditCard customers.CreditCard) int {
-
-	if creditCard.Validity.After(time.Now()) && rand.Float64() <= common.SuccessProbability {
-		return ValidationComplete
-	} else {
-		return ValidationFailed
-	}
+func verifyPurchase(creditCard customers.CreditCard) bool {
+	return creditCard.Validity.After(time.Now()) && rand.Float64() <= common.SuccessProbability
 }
 
 func generateCustomerCart(query *sqlx.Rows) []CustomerCartJSON {

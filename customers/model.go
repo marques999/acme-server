@@ -12,7 +12,6 @@ const (
 	Validity       = "validity"
 	Customers      = "customers"
 	Name           = "name"
-	Country        = "country"
 	Username       = "username"
 	Password       = "password"
 	Address1       = "address1"
@@ -40,7 +39,6 @@ type CreditCardJSON struct {
 type Customer struct {
 	common.Model
 	Name         string
-	Country      string
 	Username     string
 	Password     string
 	Address1     string
@@ -53,7 +51,6 @@ type Customer struct {
 
 type CustomerList struct {
 	Name      string    `binding:"required" json:"name"`
-	Country   string    `binding:"required" json:"country"`
 	Username  string    `binding:"required" json:"username"`
 	Address1  string    `binding:"required" json:"address1"`
 	Address2  string    `binding:"required" json:"address2"`
@@ -64,7 +61,6 @@ type CustomerList struct {
 
 type CustomerInsert struct {
 	Name       string         `binding:"required" json:"name"`
-	Country    string         `binding:"required" json:"country"`
 	Username   string         `binding:"required" json:"username"`
 	Password   string         `binding:"required" json:"password"`
 	Address1   string         `binding:"required" json:"address1"`
@@ -76,7 +72,6 @@ type CustomerInsert struct {
 
 type CustomerUpdate struct {
 	Name       string         `binding:"required" json:"name"`
-	Country    string         `binding:"required" json:"country"`
 	Password   string         `binding:"required" json:"password"`
 	Address1   string         `binding:"required" json:"address1"`
 	Address2   string         `binding:"required" json:"address2"`
@@ -88,10 +83,10 @@ type CustomerUpdate struct {
 func Migrate(database *sqlx.DB) {
 
 	if _, errors := database.Exec(`CREATE TABLE credit_cards(
-		id serial NOT NULL CONSTRAINT credit_cards_pkey PRIMARY KEY,
+		id SERIAL NOT NULL CONSTRAINT credit_cards_pkey PRIMARY KEY,
 		type TEXT NOT NULL,
 		number TEXT NOT NULL,
-		validity timestamp WITH time zone DEFAULT CURRENT_TIMESTAMP NOT NULL)
+		validity TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL)
 	`); errors == nil {
 
 		insertCreditCard(database, &CreditCardJSON{
@@ -116,17 +111,16 @@ func Migrate(database *sqlx.DB) {
 	}
 
 	if _, errors := database.Exec(`CREATE TABLE customers(
-		id serial NOT NULL CONSTRAINT customers_pkey PRIMARY KEY,
+		id SERIAL NOT NULL CONSTRAINT customers_pkey PRIMARY KEY,
 		name TEXT NOT NULL,
-		country VARCHAR(2) NOT NULL,
 		username VARCHAR(32) NOT NULL UNIQUE,
 		password VARCHAR(64) NOT NULL,
 		address1 TEXT NOT NULL,
 		address2 TEXT NOT NULL,
 		public_key TEXT NOT NULL,
 		tax_number VARCHAR(9),
-		created_at timestamp WITH time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-		updated_at timestamp WITH time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+		created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
+		updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
 		credit_card_id INTEGER
 			CONSTRAINT fk_customers_credit_card_id
 			REFERENCES credit_cards(id) ON UPDATE CASCADE ON DELETE CASCADE)
@@ -141,7 +135,6 @@ func Migrate(database *sqlx.DB) {
 			TaxNumber: "930248516",
 			Address1:  "Rua Branco, Nº 25",
 			Address2:  "8681-962 Tomar",
-			Country:   "ES",
 			PublicKey: `MEowDQYJKoZIhvcNAQEBBQADOQAwNgIvAL1L9h1N9xqNe0I4ddyjKD6lv0ArcEhBJbU550urvmvJ
 qa1Rm8Zr+V0+VCp9swcCAwEAAQ==`,
 		}, 1)
@@ -153,7 +146,6 @@ qa1Rm8Zr+V0+VCp9swcCAwEAAQ==`,
 			TaxNumber: "761489053",
 			Address1:  "Rua São Diogo, Nº 855",
 			Address2:  "6311-969 Vendas Novas",
-			Country:   "JP",
 			PublicKey: `MEowDQYJKoZIhvcNAQEBBQADOQAwNgIvAKCRuhMUuFoJvDVeicvyfyQf9ADQ1qNe+dabNSpOkr76
 FcVTBd+TBe2sEshVefUCAwEAAQ==`,
 		}, 2)
@@ -165,7 +157,6 @@ FcVTBd+TBe2sEshVefUCAwEAAQ==`,
 			TaxNumber: "685102439",
 			Address1:  "Avenida Lima, Nº 167",
 			Address2:  "7049-952 Santa Cruz",
-			Country:   "PT",
 			PublicKey: `MEowDQYJKoZIhvcNAQEBBQADOQAwNgIvALLIEFJe1v3hiGpzYlzo/hxEXBW2XrA47b/S2i0X7ZZv
 08HLhNfdPr2XC8ZzLpECAwEAAQ==`,
 		}, 3)
@@ -177,7 +168,6 @@ FcVTBd+TBe2sEshVefUCAwEAAQ==`,
 			TaxNumber: "537812640",
 			Address1:  "Travessa Mia Assunção, Nº 532",
 			Address2:  "5334-964 Coimbra",
-			Country:   "FR",
 			PublicKey: `MEowDQYJKoZIhvcNAQEBBQADOQAwNgIvAK0smd9hF2yMJOeidEDq2GieQJY2Ac3bRpoXeOpiD/Oi
 pBrNyqlMpzEKUF917T0CAwEAAQ==`,
 		}, 4)

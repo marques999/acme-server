@@ -1,7 +1,6 @@
 package orders
 
 import (
-	"time"
 	"database/sql"
 	"github.com/jmoiron/sqlx"
 	"github.com/Masterminds/squirrel"
@@ -17,7 +16,6 @@ var preloadGet = common.SqlBuilder().Select(
 	"orders.created_at",
 	"orders.updated_at",
 	"orders.customer",
-	"orders.status",
 	"orders.token",
 ).From(Orders).Join(
 	"order_products ON orders.id = order_products.order_id",
@@ -57,57 +55,40 @@ func getOrder(database *sqlx.DB, token string, customer string) (*OrderJSON, err
 	}
 }
 
-var preloadInsert = common.SqlBuilder().Insert(Orders).Columns(
-	Customer, Status,
-).Suffix(common.ReturningRow)
+var preloadUpdate = common.SqlBuilder().Update(Orders)
+var preloadInsert = common.SqlBuilder().Insert(Orders).Columns(Customer).Suffix(common.ReturningRow)
 
 func insertOrder(
 	database *sqlx.DB,
 	customer *customers.Customer,
 	customerCartPOST []CustomerCartPOST,
-) (*map[string]interface{}, error) {
+) (*OrderJSON, error) {
 
 	order := Order{}
 
-	if query, args, errors := preloadInsert.Values(
-		customer.Username, generateStatus(customer.CreditCard),
-	).ToSql(); errors != nil {
+	if verifyPurchase(customer.CreditCard) == false {
+		return nil, common.PurchaseValidationError
+	} else if query, args, errors := preloadInsert.Values(customer.Username).ToSql(); errors != nil {
 		return nil, errors
 	} else if errors = database.Get(&order, query, args...); errors != nil {
 		return nil, errors
-	} else if customerCart, errors := insertProducts(database, order.ID, customerCartPOST); errors != nil {
+	} else if errors := insertProducts(database, order.ID, customerCartPOST); errors != nil {
 		return nil, errors
 	} else if token, errors := order.generateToken(); errors != nil {
 		return nil, errors
-	} else if query, args, errors := preloadUpdate.Set(Token, token).Where(
+	} else if _, errors := preloadUpdate.Set(Token, token).Where(
 		squirrel.Eq{common.Id: order.ID},
-	).ToSql(); errors != nil {
+	).RunWith(database.DB).Exec(); errors != nil {
 		return nil, errors
-	} else if errors := database.Get(&order, query, args...); errors != nil {
+	} else if order, errors := getOrder(database, token, customer.Username); errors != nil {
 		return nil, errors
 	} else {
-		return order.generateJson(customerCart), nil
+		return order, nil
 	}
 }
 
 var preloadManyDelete = common.SqlBuilder().Delete(OrderProducts)
 var preloadDelete = common.SqlBuilder().Delete(Orders).Suffix(common.ReturningRow)
-var preloadUpdate = common.SqlBuilder().Update(Orders).Suffix(common.ReturningRow)
-
-func updateOrder(database *sqlx.DB, token string) (*Order, error) {
-
-	if query, args, errors := preloadUpdate.SetMap(map[string]interface{}{
-		Status:           Purchased,
-		common.UpdatedAt: time.Now(),
-	}).Where(
-		squirrel.Eq{Token: token},
-	).ToSql(); errors != nil {
-		return nil, errors
-	} else {
-		var order Order
-		return &order, database.Get(&order, query, args...)
-	}
-}
 
 func deleteOrder(database *sqlx.DB, token string, customer string) (sql.Result, error) {
 
@@ -149,37 +130,28 @@ var preloadManyInsert = common.SqlBuilder().Insert(OrderProducts).Columns(
 	OrderID, ProductID, Quantity,
 )
 
-func insertProducts(database *sqlx.DB, orderId int, customerCartPOST []CustomerCartPOST) ([]CustomerCartJSON, error) {
+func insertProducts(database *sqlx.DB, orderId int, customerCartPOST []CustomerCartPOST) error {
 
+	builder := preloadManyInsert
 	barcodes := make([]string, len(customerCartPOST))
 
 	for index, entry := range customerCartPOST {
 		barcodes[index] = entry.Product
 	}
 
-	customerCart := make([]CustomerCartJSON, len(customerCartPOST))
 	purchased, errors := products.GetProductsByBarcode(database, barcodes)
 
 	if errors != nil {
-		return customerCart, errors
+		return errors
 	}
 
-	builder := preloadManyInsert
-
 	for index, product := range purchased {
-
-		quantity := customerCartPOST[index].Quantity
-		builder = builder.Values(orderId, product.ID, quantity)
-
-		customerCart[index] = CustomerCartJSON{
-			Product:  product.GenerateJson(),
-			Quantity: quantity,
-		}
+		builder = builder.Values(orderId, product.ID, customerCartPOST[index].Quantity)
 	}
 
 	if _, errors = builder.RunWith(database.DB).Exec(); errors != nil {
-		return []CustomerCartJSON{}, errors
+		return errors
 	} else {
-		return customerCart, nil
+		return nil
 	}
 }
