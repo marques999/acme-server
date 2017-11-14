@@ -101,9 +101,7 @@ func deleteOrder(database *sqlx.DB, token string, customer string) (sql.Result, 
 	} else if errors := database.Get(&order, query, args...); errors != nil {
 		return nil, errors
 	} else {
-		return preloadManyDelete.Where(squirrel.Eq{
-			OrderID: order.ID,
-		}).RunWith(database.DB).Exec()
+		return preloadManyDelete.Where(squirrel.Eq{OrderID: order.ID}).RunWith(database.DB).Exec()
 	}
 }
 

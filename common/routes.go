@@ -6,11 +6,5 @@ import (
 )
 
 func InitializeRoutes(middleware *jwt.GinJWTMiddleware, router *gin.Engine) {
-
 	router.POST("/login", middleware.LoginHandler)
-
-	routes := router.Group("/auth").Use(middleware.MiddlewareFunc())
-	{
-		routes.GET("/refresh", middleware.RefreshHandler)
-	}
 }
