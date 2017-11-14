@@ -134,8 +134,8 @@ func Migrate(database *sqlx.DB) {
 			TaxNumber: "930248516",
 			Address1:  "Rua Branco, Nº 25",
 			Address2:  "8681-962 Tomar",
-			PublicKey: `MEowDQYJKoZIhvcNAQEBBQADOQAwNgIvAL1L9h1N9xqNe0I4ddyjKD6lv0ArcEhBJbU550urvmvJ
-qa1Rm8Zr+V0+VCp9swcCAwEAAQ==`,
+			PublicKey: `MEowDQYJKoZIhvcNAQEBBQADOQAwNgIvALpYKKOVs5FAqSegOshC1M5Nr5kTtLOKssBgZxGzlp04
+jTrbtEh7aIvgvT3teMkCAwEAAQ==`,
 		}, 1)
 
 		insertCustomer(database, CustomerInsert{

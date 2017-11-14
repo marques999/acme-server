@@ -11,6 +11,8 @@ func List(database *sqlx.DB) (int, interface{}) {
 
 	if products, errors := getProducts(database); errors != nil {
 		return http.StatusInternalServerError, errors
+	} else if products == nil {
+		return http.StatusOK, []Product{}
 	} else {
 		return http.StatusOK, products
 	}

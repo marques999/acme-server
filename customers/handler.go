@@ -23,6 +23,8 @@ func List(database *sqlx.DB, username string) (int, interface{}) {
 		return common.PermissionDenied()
 	} else if customers, errors := getCustomers(database); errors != nil {
 		return http.StatusInternalServerError, common.JSON(errors)
+	} else if customers == nil {
+		return http.StatusOK, []CustomerList{}
 	} else {
 		return http.StatusOK, customers
 	}

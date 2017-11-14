@@ -13,6 +13,8 @@ func List(database *sqlx.DB, username string) (int, interface{}) {
 
 	if orders, errors := listOrders(database, username); errors != nil {
 		return http.StatusInternalServerError, errors
+	} else if orders == nil {
+		return http.StatusOK, []OrderJSON{}
 	} else {
 		return http.StatusOK, orders
 	}
