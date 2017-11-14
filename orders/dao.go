@@ -130,21 +130,23 @@ var preloadManyInsert = common.SqlBuilder().Insert(OrderProducts).Columns(
 
 func insertProducts(database *sqlx.DB, orderId int, customerCartPOST []CustomerCartPOST) error {
 
-	builder := preloadManyInsert
+	barcodesQuantities := make(map[string]int)
 	barcodes := make([]string, len(customerCartPOST))
 
 	for index, entry := range customerCartPOST {
 		barcodes[index] = entry.Product
+		barcodesQuantities[entry.Product] = entry.Quantity
 	}
 
-	purchased, errors := products.GetProductsByBarcode(database, barcodes)
+	builder := preloadManyInsert
+	purchasedProducts, errors := products.GetProductsByBarcode(database, barcodes)
 
 	if errors != nil {
 		return errors
 	}
 
-	for index, product := range purchased {
-		builder = builder.Values(orderId, product.ID, customerCartPOST[index].Quantity)
+	for _, product := range purchasedProducts {
+		builder = builder.Values(orderId, product.ID, barcodesQuantities[product.Barcode])
 	}
 
 	if _, errors = builder.RunWith(database.DB).Exec(); errors != nil {

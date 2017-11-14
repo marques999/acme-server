@@ -75,7 +75,6 @@ type CustomerUpdate struct {
 	Password   string         `binding:"required" json:"password"`
 	Address1   string         `binding:"required" json:"address1"`
 	Address2   string         `binding:"required" json:"address2"`
-	PublicKey  string         `binding:"required" json:"public_key"`
 	TaxNumber  string         `binding:"required" json:"tax_number"`
 	CreditCard CreditCardJSON `binding:"required" json:"credit_card"`
 }
